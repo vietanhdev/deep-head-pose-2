@@ -10,11 +10,11 @@ import datasets
 import utils
 import models
 
-PROJECT_DIR = "E:/demo/python/head_pose/"
+PROJECT_DIR = "/mnt/DATA/GR/MAIN_STREAM/tf-keras-deep-head-pose/"
 
-AFLW2000_DATA_DIR = 'E:/data/AFLW2000/'
-AFLW2000_MODEL_FILE = PROJECT_DIR + 'model/aflw2000_model.h5'
-AFLW2000_TEST_SAVE_DIR = 'E:/ml/data/aflw2000_test/'
+# AFLW2000_DATA_DIR = 'E:/data/AFLW2000/'
+# AFLW2000_MODEL_FILE = PROJECT_DIR + 'model/aflw2000_model.h5'
+# AFLW2000_TEST_SAVE_DIR = 'E:/ml/data/aflw2000_test/'
 
 BIWI_DATA_DIR = 'E:/ml/data/Biwi/kinect_head_pose_db/hpdb/'
 BIWI_MODEL_FILE = PROJECT_DIR + 'model/biwi_model.h5'
@@ -29,9 +29,9 @@ EPOCHS=20
 
 dataset = datasets.Biwi(BIWI_DATA_DIR, 'filename_list.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, ratio=0.95)
 
-net = models.AlexNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE)
+net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE)
 
-net.train(BIWI_MODEL_FILE, max_epoches=EPOCHS, load_weight=True)
+net.train(BIWI_MODEL_FILE, max_epoches=EPOCHS, load_weight=False)
 
 # net.test(BIWI_TEST_SAVE_DIR)
 

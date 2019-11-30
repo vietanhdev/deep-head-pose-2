@@ -54,13 +54,14 @@ class Biwi:
         bbox_path = os.path.join(data_dir, file_name.split('/')[0] + '/bbox.txt')
         
         # Load bounding box
-        bbox = open(bbox_path, 'r')
-        line = bbox.readline().split(' ')
-        if len(line) < 4:
-            x_min, x_max, y_min, y_max = 0, img.size[0], 0, img.size[1]
-        else:
-            x_min, x_max, y_min, y_max = [float(line[0]), float(line[1]), float(line[2]), float(line[3])]
-        bbox.close()
+        # bbox = open(bbox_path, 'r')
+        # line = bbox.readline().split(' ')
+        # if len(line) < 4:
+        #     x_min, x_max, y_min, y_max = 0, img.size[0], 0, img.size[1]
+        # else:
+        #     x_min, x_max, y_min, y_max = [float(line[0]), float(line[1]), float(line[2]), float(line[3])]
+        # bbox.close()
+        x_min, x_max, y_min, y_max = 0, img.shape[0], 0, img.shape[1]
     
         # Loosely crop face
         k = 0.3
