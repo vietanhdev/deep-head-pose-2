@@ -12,6 +12,7 @@ import datasets
 import utils
 import models
 
+from pathlib import Path
 import argparse
 
 parser = argparse.ArgumentParser()
@@ -25,14 +26,14 @@ parser.add_argument(
     help='Output model file')
 parser.add_argument(
     '-t',
-    '--test_save_dir', default="./data/kinect_head_pose_test/",
+    '--test_save_dir', default="./test_result/",
     help='Test save directory')
 args = parser.parse_args()
 
 BIN_NUM = 66
 INPUT_SIZE = 64
 BATCH_SIZE = 16
-EPOCHS = 1
+EPOCHS = 30
 
 # Prepare dataset
 dataset = datasets.Biwi(args.data_dir, 'filename_list.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, ratio=0.95)
@@ -44,4 +45,5 @@ net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INP
 net.train(args.model_file, max_epoches=EPOCHS, load_weight=False, tf_board_log_dir="./logs")
 
 # Test model
+Path(args.test_save_dir).mkdir(parents=True, exist_ok=True) # Make test folder if not exist
 net.test(args.test_save_dir)
