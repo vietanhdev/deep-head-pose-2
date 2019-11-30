@@ -6,13 +6,14 @@ import utils
 import random
 
 
-def split_samples(samples_file, train_file, test_file, ratio=0.8):
+def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8, val_ratio=0.15):
     with open(samples_file) as samples_fp:
         lines = samples_fp.readlines()
         random.shuffle(lines)
 
-        train_num = int(len(lines) * ratio)
-        test_num = len(lines) - train_num
+        train_num = int(len(lines) * train_ratio)
+        val_num = int(len(lines) * val_ratio)
+        test_num = len(lines) - train_num - val_num
         count = 0
         data = []
         for line in lines:
@@ -24,12 +25,18 @@ def split_samples(samples_file, train_file, test_file, ratio=0.8):
                         train_fp.write(d)
                 data = []
 
-            if count == train_num + test_num:
+            if count == train_num + val_num:
+                with open(val_file, "w+") as val_fp:
+                    for d in data:
+                        val_fp.write(d)
+                data = []
+
+            if count == train_num + val_num + test_num:
                 with open(test_file, "w+") as test_fp:
                     for d in data:
                         test_fp.write(d)
                 data = []
-    return train_num, test_num
+    return train_num, val_num, test_num
                 
 def get_list_from_filenames(file_path):
     with open(file_path) as f:
@@ -38,7 +45,7 @@ def get_list_from_filenames(file_path):
 
 
 class Biwi:
-    def __init__(self, data_dir, data_file, batch_size=64, input_size=64, ratio=0.8):
+    def __init__(self, data_dir, data_file, batch_size=64, input_size=64, train_ratio=0.8, val_ratio=0.15):
         self.data_dir = data_dir
         self.data_file = data_file
         self.batch_size = batch_size
@@ -46,8 +53,9 @@ class Biwi:
         self.train_file = None
         self.test_file = None
         self.__gen_filename_list(os.path.join(self.data_dir, self.data_file))
-        self.train_num, self.test_num = self.__gen_train_test_file(os.path.join(self.data_dir, 'train.txt'),
-                                                                   os.path.join(self.data_dir, 'test.txt'), ratio=ratio)
+        self.train_num, self.val_num, self.test_num = self.__gen_train_test_file(os.path.join(self.data_dir, 'train.txt'),
+            os.path.join(self.data_dir, 'val.txt'),
+            os.path.join(self.data_dir, 'test.txt'), train_ratio=train_ratio, val_ratio=val_ratio)
         
     def __get_input_img(self, data_dir, file_name, img_ext='.png', annot_ext='.txt'):
         img = cv2.imread(os.path.join(data_dir, file_name + '_rgb' + img_ext))
@@ -131,13 +139,17 @@ class Biwi:
                                 # print(filename)
                                 tlf.write(subdir + '/' + filename + '\n')
     
-    def __gen_train_test_file(self, train_file, test_file, ratio=0.8):
+    def __gen_train_test_file(self, train_file, val_file, test_file, train_ratio=0.8, val_ratio=0.15):
         self.train_file = train_file
+        self.val_file = val_file
         self.test_file = test_file
-        return split_samples(os.path.join(self.data_dir, self.data_file), self.train_file, self.test_file, ratio=ratio)
+        return split_samples(os.path.join(self.data_dir, self.data_file), train_file, val_file, test_file, train_ratio=train_ratio, val_ratio=train_ratio)
     
     def train_num(self):
         return self.train_num
+
+    def val_num(self):
+        return self.val_num
     
     def test_num(self):
         return self.test_num
@@ -153,16 +165,18 @@ class Biwi:
         # print(save_path)
         cv2.imwrite(save_path, cv2_img)
         
-    def data_generator(self, shuffle=True, test=False):
+    def data_generator(self, shuffle=True, partition="train"):
         sample_file = self.train_file
-        if test:
+        if partition == "test":
             sample_file = self.test_file
+        elif partition == "val":
+            sample_file = self.val_file
     
         filenames = get_list_from_filenames(sample_file)
         file_num = len(filenames)
         
         while True:
-            if shuffle and not test:
+            if shuffle and partition != "test":
                 idx = np.random.permutation(range(file_num))
                 filenames = np.array(filenames)[idx]
             max_num = file_num - (file_num % self.batch_size)
@@ -187,11 +201,11 @@ class Biwi:
                 batch_pitch = np.array(batch_pitch)
                 batch_roll = np.array(batch_roll)
                 
-                if test:
+                if partition == "test":
                     yield (batch_x, [batch_yaw, batch_pitch, batch_roll], names)
                 else:
                     yield (batch_x, [batch_yaw, batch_pitch, batch_roll])
-            if test:
+            if partition == "test":
                 break
 
 class AFLW2000:
@@ -201,6 +215,7 @@ class AFLW2000:
         self.batch_size = batch_size
         self.input_size = input_size
         self.train_file = None
+        self.val_file = None
         self.test_file = None
         self.__gen_filename_list(os.path.join(self.data_dir, self.data_file))
         self.train_num, self.test_num = self.__gen_train_test_file(os.path.join(self.data_dir, 'train.txt'),

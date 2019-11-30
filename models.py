@@ -231,17 +231,18 @@ class HeadPoseNet:
             tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
             mc = ModelCheckpoint(filepath=model_path, save_weights_only=False, verbose=2)
             
-            callback = [tb, mc]
-            self.model.fit_generator(generator=self.dataset.data_generator(test=False),
+            self.model.fit_generator(generator=self.dataset.data_generator(partition="train"),
                                     epochs=max_epoches,
                                     steps_per_epoch=self.dataset.train_num // self.batch_size,
+                                    validation_data=self.dataset.data_generator(partition="val"),
+                                    validation_steps=self.dataset.val_num // self.batch_size,
                                     max_queue_size=10,
                                     workers=1,
-                                    callbacks=callback,
+                                    callbacks=[tb, mc],
                                     verbose=1)
             
     def test(self, save_dir):
-        for i, (images, [batch_yaw, batch_pitch, batch_roll], names) in enumerate(self.dataset.data_generator(test=True)):
+        for i, (images, [batch_yaw, batch_pitch, batch_roll], names) in enumerate(self.dataset.data_generator(partition="test")):
             predictions = self.model.predict(images, batch_size=self.batch_size, verbose=1)
             predictions = np.asarray(predictions)
             pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0,:,:]) * self.idx_tensor, axis=1) * 3 - 99
