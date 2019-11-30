@@ -114,3 +114,9 @@ dmypy.json
 
 # Data folder
 /data
+
+# Log folder
+/logs
+
+# Model folder
+/models

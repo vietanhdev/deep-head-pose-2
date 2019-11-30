@@ -5,6 +5,8 @@ import cv2
 import scipy.io as sio
 import utils
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, DepthwiseConv2D, GlobalAveragePooling2D
+from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
+from tensorflow.keras import callbacks
 
 EPOCHS=25
 
@@ -220,20 +222,23 @@ class HeadPoseNet:
        
         return model
 
-    def train(self, model_path, max_epoches=EPOCHS, load_weight=True):
-        self.model.summary()
+    def train(self, model_path, max_epoches=EPOCHS, tf_board_log_dir="./logs", load_weight=True):
         
         if load_weight:
             self.model.load_weights(model_path)
         else:
+            # Define the callbacks for training
+            tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
+            mc = ModelCheckpoint(filepath=model_path, save_weights_only=False, verbose=2)
+            
+            callback = [tb, mc]
             self.model.fit_generator(generator=self.dataset.data_generator(test=False),
                                     epochs=max_epoches,
                                     steps_per_epoch=self.dataset.train_num // self.batch_size,
                                     max_queue_size=10,
                                     workers=1,
+                                    callbacks=callback,
                                     verbose=1)
-
-            self.model.save(model_path)
             
     def test(self, save_dir):
         for i, (images, [batch_yaw, batch_pitch, batch_roll], names) in enumerate(self.dataset.data_generator(test=True)):

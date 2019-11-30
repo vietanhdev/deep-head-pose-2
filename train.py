@@ -1,4 +1,6 @@
 import tensorflow as tf
+for gpu in tf.config.experimental.list_physical_devices('GPU'):
+    tf.compat.v2.config.experimental.set_memory_growth(gpu, True)
 import os
 import numpy as np
 import cv2
@@ -19,7 +21,7 @@ parser.add_argument(
     help='Data directory')
 parser.add_argument(
     '-m',
-    '--model_file', default="./models/shuffle_net_dhp.h5",
+    '--model_file', default="./models/shuffle_net_dhp",
     help='Output model file')
 parser.add_argument(
     '-t',
@@ -29,8 +31,8 @@ args = parser.parse_args()
 
 BIN_NUM = 66
 INPUT_SIZE = 64
-BATCH_SIZE=16
-EPOCHS=20
+BATCH_SIZE = 16
+EPOCHS = 1
 
 # Prepare dataset
 dataset = datasets.Biwi(args.data_dir, 'filename_list.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, ratio=0.95)
@@ -39,7 +41,7 @@ dataset = datasets.Biwi(args.data_dir, 'filename_list.txt', batch_size=BATCH_SIZ
 net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE)
 
 # Train model
-net.train(args.model_file, max_epoches=EPOCHS, load_weight=False)
+net.train(args.model_file, max_epoches=EPOCHS, load_weight=False, tf_board_log_dir="./logs")
 
 # Test model
 net.test(args.test_save_dir)
