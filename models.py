@@ -166,15 +166,12 @@ class ShuffleNetv2(tf.keras.Model):
         x = self.gap(x)
         return x
 
-def mask_to_categorical(image, mask):
-    mask = tf.one_hot(tf.cast(mask, tf.int32), 3)
-    mask = tf.cast(mask, tf.float32)
-    return image, mask
 class HeadPoseNet:
-    def __init__(self, dataset, class_num, batch_size, input_size):
+    def __init__(self, dataset, class_num, batch_size, input_size, learning_rate=0.001):
         self.class_num = class_num
         self.batch_size = batch_size
         self.input_size = input_size
+        self.learning_rate = learning_rate
         self.idx_tensor = [idx for idx in range(self.class_num)]
         self.idx_tensor = tf.Variable(np.array(self.idx_tensor, dtype=np.float32))
         self.dataset = dataset
@@ -217,7 +214,7 @@ class HeadPoseNet:
             'roll':self.__loss_angle,
         }
         
-        model.compile(optimizer=tf.optimizers.Adam(),
+        model.compile(optimizer=tf.optimizers.Adam(self.learning_rate),
                         loss=losses)
        
         return model
@@ -229,7 +226,7 @@ class HeadPoseNet:
         else:
             # Define the callbacks for training
             tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
-            mc = ModelCheckpoint(filepath=model_path, save_weights_only=False, verbose=2)
+            mc = ModelCheckpoint(filepath=model_path, save_weights_only=True, save_format="h5", verbose=2)
             
             self.model.fit_generator(generator=self.dataset.data_generator(partition="train"),
                                     epochs=max_epoches,

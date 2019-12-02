@@ -22,7 +22,7 @@ parser.add_argument(
     help='Data directory')
 parser.add_argument(
     '-m',
-    '--model_file', default="./models/shuffle_net_dhp",
+    '--model_file', default="./models/shuffle_net_dhp.h5",
     help='Output model file')
 parser.add_argument(
     '-t',
@@ -33,13 +33,13 @@ args = parser.parse_args()
 BIN_NUM = 66
 INPUT_SIZE = 64
 BATCH_SIZE = 16
-EPOCHS = 30
+EPOCHS = 1
 
 # Prepare dataset
 dataset = datasets.Biwi(args.data_dir, 'filename_list.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, train_ratio=0.8, val_ratio=0.15)
 
 # Build model
-net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE)
+net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, learning_rate=0.0001)
 
 # Train model
 net.train(args.model_file, max_epoches=EPOCHS, load_weight=False, tf_board_log_dir="./logs")
