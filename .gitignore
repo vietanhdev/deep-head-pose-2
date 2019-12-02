@@ -119,7 +119,8 @@ dmypy.json
 /logs
 
 # Model folder
-/models
+/models/*
+!/models/.gitkeep
 
 # Test results
 /test_result
