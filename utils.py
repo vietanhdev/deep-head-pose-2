@@ -87,30 +87,24 @@ def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 100):
     return img
     
 def crop_face_loosely(shape, img, input_size):
-    x = []
-    y = []
-    for (_x, _y) in shape:
-        x.append(_x)
-        y.append(_y)
-    
-    max_x = min(max(x), img.shape[1])
-    min_x = max(min(x), 0)
-    max_y = min(max(y), img.shape[0])
-    min_y = max(min(y), 0)
+    max_x = min(shape[2], img.shape[1])
+    min_x = max(shape[0], 0)
+    max_y = min(shape[3], img.shape[0])
+    min_y = max(shape[1], 0)
     
     Lx = max_x - min_x
     Ly = max_y - min_y
     
     Lmax = int(max(Lx, Ly) * 2.0)
     
-    delta = Lmax // 2
+    delta = Lmax * 0.4
     
-    center_x = (max(x) + min(x)) // 2
-    center_y = (max(y) + min(y)) // 2
+    center_x = (shape[2] + shape[0]) // 2
+    center_y = (shape[3] + shape[1]) // 2
     start_x = int(center_x - delta)
-    start_y = int(center_y - delta - 30)
+    start_y = int(center_y - delta - 10)
     end_x = int(center_x + delta)
-    end_y = int(center_y + delta - 30)
+    end_y = int(center_y + delta - 10)
     
     if start_y < 0:
         start_y = 0
@@ -122,14 +116,9 @@ def crop_face_loosely(shape, img, input_size):
         end_y = img.shape[0]
     
     crop_face = img[start_y:end_y, start_x:end_x]
-    
-    cv2.imshow('crop_face', crop_face)
-    
     crop_face = cv2.resize(crop_face, (input_size, input_size))
-    input_img = np.asarray(crop_face, dtype=np.float32)
-    normed_img = (input_img - input_img.mean()) / input_img.std()
-    
-    return normed_img
+
+    return crop_face
 
 def get_loose_bbox(shape, img):
     max_x = min(shape[2], img.shape[1])

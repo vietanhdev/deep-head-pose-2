@@ -58,34 +58,19 @@ class Biwi:
         
     def __get_input_img(self, data_dir, file_name, img_ext='.png', annot_ext='.txt'):
         img = cv2.imread(os.path.join(data_dir, file_name + '_rgb' + img_ext))
-        bbox_path = os.path.join(data_dir, file_name.split('/')[0] + '/bbox.txt')
+        bbox_path = os.path.join(
+            data_dir, "{}_bbox.txt".format(file_name))
+        landmark_path = os.path.join(
+            data_dir, "{}_landmark.txt".format(file_name))
         
         # Load bounding box
-        # bbox = open(bbox_path, 'r')
-        # line = bbox.readline().split(' ')
-        # if len(line) < 4:
-        #     x_min, x_max, y_min, y_max = 0, img.size[0], 0, img.size[1]
-        # else:
-        #     x_min, x_max, y_min, y_max = [float(line[0]), float(line[1]), float(line[2]), float(line[3])]
-        # bbox.close()
-        # x_min, x_max, y_min, y_max = 0, img.shape[0], 0, img.shape[1]
+        with open(bbox_path, "r") as text_file:
+            line = text_file.readline().split(' ')
+            bbox = [int(line[0]), int(line[1]), int(line[2]), int(line[3])]
     
-        # # Loosely crop face
-        # k = 0.3
-        # x_min -= k * abs(x_max - x_min)
-        # y_min -= k * abs(y_max - y_min)
-        # x_max += k * abs(x_max - x_min)
-        # y_max += k * abs(y_max - y_min)
-        # crop_img = img[int(y_min): int(y_max), int(x_min): int(x_max)]
-
-        crop_img = self.face_detector.get_face(img, bbox_path)
-        
-        # print(crop_img.shape)
-        # cv2.imshow('crop_img', crop_img)
-        # cv2.waitKey(0)
-        
+        # Loosely crop face
+        crop_img = utils.crop_face_loosely(bbox, img, self.input_size)
         crop_img = cv2.resize(crop_img, (self.input_size, self.input_size))
-        
         crop_img = np.asarray(crop_img)
         normed_img = (crop_img - crop_img.mean())/crop_img.std()
         
