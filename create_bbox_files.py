@@ -20,7 +20,7 @@ parser.add_argument(
     help='Data directory')
 parser.add_argument(
     '-s',
-    '--input_size', default=64,
+    '--input_size', default=128,
     type=int,
     help='Input size for deep head pose')
 

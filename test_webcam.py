@@ -23,7 +23,7 @@ args = parser.parse_args()
 face_landmark_path = 'models/shape_predictor_68_face_landmarks.dat'
 
 BIN_NUM = 66
-INPUT_SIZE = 64
+INPUT_SIZE = 128
 BATCH_SIZE=16
 
 net = models.HeadPoseNet(None, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE)
