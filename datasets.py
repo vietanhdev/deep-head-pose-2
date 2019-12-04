@@ -60,9 +60,7 @@ class Biwi:
         img = cv2.imread(os.path.join(data_dir, file_name + '_rgb' + img_ext))
         bbox_path = os.path.join(
             data_dir, "{}_bbox.txt".format(file_name))
-        landmark_path = os.path.join(
-            data_dir, "{}_landmark.txt".format(file_name))
-        
+
         # Load bounding box
         with open(bbox_path, "r") as text_file:
             line = text_file.readline().split(' ')
