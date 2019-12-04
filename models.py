@@ -219,7 +219,7 @@ class HeadPoseNet:
         }
         
         model.compile(optimizer=tf.optimizers.Adam(self.learning_rate),
-                        loss=losses)
+                        loss=losses, loss_weights=[0.025, 0.025, 0.1, 10])
        
         return model
 
