@@ -205,13 +205,17 @@ class HeadPoseNet:
         fc_yaw = tf.keras.layers.Dense(name='yaw', units=self.class_num)(feature)
         fc_pitch = tf.keras.layers.Dense(name='pitch', units=self.class_num)(feature)
         fc_roll = tf.keras.layers.Dense(name='roll', units=self.class_num)(feature)
+
+        fc_1_landmarks = tf.keras.layers.Dense(512, activation='relu', name='fc_landmarks')(feature)
+        fc_2_landmarks = tf.keras.layers.Dense(10, name='landmarks')(fc_1_landmarks)
     
-        model = tf.keras.Model(inputs=inputs, outputs=[fc_yaw, fc_pitch, fc_roll])
+        model = tf.keras.Model(inputs=inputs, outputs=[fc_yaw, fc_pitch, fc_roll, fc_2_landmarks])
         
         losses = {
             'yaw':self.__loss_angle,
             'pitch':self.__loss_angle,
             'roll':self.__loss_angle,
+            'landmarks':'mean_squared_error'
         }
         
         model.compile(optimizer=tf.optimizers.Adam(self.learning_rate),
@@ -239,7 +243,7 @@ class HeadPoseNet:
                                     verbose=1)
             
     def test(self, save_dir):
-        for i, (images, [batch_yaw, batch_pitch, batch_roll], names) in enumerate(self.dataset.data_generator(partition="test")):
+        for i, (images, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names) in enumerate(self.dataset.data_generator(partition="test")):
             predictions = self.model.predict(images, batch_size=self.batch_size, verbose=1)
             predictions = np.asarray(predictions)
             pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0,:,:]) * self.idx_tensor, axis=1) * 3 - 99
@@ -247,7 +251,7 @@ class HeadPoseNet:
             pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[2,:,:]) * self.idx_tensor, axis=1) * 3 - 99
             # print(pred_cont_yaw.shape)
             
-            self.dataset.save_test(names[0], save_dir, [pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0]])
+            self.dataset.save_test(names[0], save_dir, [pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0], batch_landmark[0]])
             
     def test_online(self, face_imgs):
         batch_x = np.array(face_imgs, dtype=np.float32)
@@ -257,5 +261,6 @@ class HeadPoseNet:
         pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[1, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[2, :, :]) * self.idx_tensor, axis=1) * 3 - 99
-        
-        return pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0]
+        pred_landmark = predictions[3]
+
+        return pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0], pred_landmark

@@ -52,7 +52,7 @@ while cap.isOpened():
             frames.append(face_crop)
             if len(frames) == 1:
                 print(shape[30])
-                pred_cont_yaw, pred_cont_pitch, pred_cont_roll = net.test_online(frames)
+                pred_cont_yaw, pred_cont_pitch, pred_cont_roll, landmark = net.test_online(frames)
                 
                 cv2_img = utils.draw_axis(frame, pred_cont_yaw, pred_cont_pitch, pred_cont_roll, tdx=shape[30][0],
                                           tdy=shape[30][1], size=100)

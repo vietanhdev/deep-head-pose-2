@@ -15,9 +15,15 @@ from RetinaFace.retinaface import RetinaFace
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '-s',
+    '-d',
     '--data_dir', default="./data/kinect_head_pose_db/hpdb/",
     help='Data directory')
+parser.add_argument(
+    '-s',
+    '--input_size', default=64,
+    type=int,
+    help='Input size for deep head pose')
+
 
 args = parser.parse_args()
 
@@ -71,20 +77,14 @@ while True:
     bbox = faces[0]
     bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
 
+    # Get scale factors
+    bbox_loosen, scale_x, scale_y = utils.get_loose_bbox(bbox, img, args.input_size)
+
     if bbox is not None and all(x > 0 for x in bbox):
         draw = cv2.rectangle(
             draw, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 255), 2)
 
     landmark = landmarks[0].astype(np.int)
-    for l in range(landmark.shape[0]):
-        color = (0, 0, 255)
-        if l == 0 or l == 3:
-            color = (0, 255, 0)
-        cv2.circle(
-            draw, (landmark[l][0], landmark[l][1]), 1, color, 2)
-
-    cv2.imshow("Image", draw)
-    k = cv2.waitKey(1)
 
     filenames_filtered.append(filenames[idx])
 
@@ -95,9 +95,24 @@ while True:
     with open(landmark_path, "w") as text_file:
         points = []
         for l in range(landmark.shape[0]):
-            points.append("{} {}".format(landmark[l][0], landmark[l][1]))
+
+            # Normalize landmark points
+            x = float(landmark[l][0] - bbox_loosen[0]) * scale_x
+            y = float(landmark[l][1] - bbox_loosen[1]) * scale_y
+            x -= args.input_size // 2
+            y -= args.input_size // 2
+            x /= args.input_size
+            y /= args.input_size
+
+            # Convert back and draw to check normalization
+            x_original, y_original = utils.get_original_landmark_point(x, y, bbox_loosen, args.input_size)
+            cv2.circle(draw, (x_original, y_original), 1, (0,0,255), 2)
+
+            points.append("{} {}".format(x, y))
         text_file.write("\n".join(points))
 
+    cv2.imshow("Image", draw)
+    cv2.waitKey(1)
 
 
 # Save filtered file list

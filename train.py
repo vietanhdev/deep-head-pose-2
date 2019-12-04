@@ -33,7 +33,7 @@ args = parser.parse_args()
 BIN_NUM = 66
 INPUT_SIZE = 128
 BATCH_SIZE = 16
-EPOCHS = 1
+EPOCHS = 10
 
 # Prepare dataset
 dataset = datasets.Biwi(args.data_dir, 'filename_list_filtered.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, train_ratio=0.8, val_ratio=0.15)

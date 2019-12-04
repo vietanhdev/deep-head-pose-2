@@ -85,6 +85,12 @@ def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 100):
     cv2.line(img, (int(tdx), int(tdy)), (int(x3),int(y3)),(255,0,0),2)
 
     return img
+
+
+def draw_landmark(img, landmark):
+    print(img)
+    return img
+
     
 def crop_face_loosely(shape, img, input_size):
     max_x = min(shape[2], img.shape[1])
@@ -120,7 +126,7 @@ def crop_face_loosely(shape, img, input_size):
 
     return crop_face
 
-def get_loose_bbox(shape, img):
+def get_loose_bbox(shape, img, input_size):
     max_x = min(shape[2], img.shape[1])
     min_x = max(shape[0], 0)
     max_y = min(shape[3], img.shape[0])
@@ -149,4 +155,22 @@ def get_loose_bbox(shape, img):
     if end_y > img.shape[0]:
         end_y = img.shape[0]
 
-    return (start_x, start_y, end_x, end_y)
+    scale_x = float(input_size) / (end_x - start_x)
+    scale_y = float(input_size) / (end_y - start_y)
+    return (start_x, start_y, end_x, end_y), scale_x, scale_y
+
+
+def get_original_landmark_point(x, y, bbox_loosen, input_size):
+    scale_x = float(input_size) / (bbox_loosen[2] - bbox_loosen[0])
+    scale_y = float(input_size) / (bbox_loosen[3] - bbox_loosen[1])
+    x = float(x)
+    y = float(y)
+    x *= input_size
+    y *= input_size
+    x += input_size // 2
+    y += input_size // 2
+    x /= scale_x
+    y /= scale_y
+    x += bbox_loosen[0]
+    y += bbox_loosen[1]
+    return int(x), int(y)
