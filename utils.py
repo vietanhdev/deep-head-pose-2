@@ -6,6 +6,11 @@ from math import cos, sin
 import dlib
 from imutils import face_utils
 
+def get_list_from_filenames(file_path):
+    with open(file_path) as f:
+        lines = f.read().splitlines()
+    return lines
+
 def plot_pose_cube(img, yaw, pitch, roll, tdx=None, tdy=None, size=150.):
     # Input is a cv2 image
     # pose_params: (pitch, yaw, roll, tdx, tdy)
@@ -125,3 +130,34 @@ def crop_face_loosely(shape, img, input_size):
     normed_img = (input_img - input_img.mean()) / input_img.std()
     
     return normed_img
+
+def get_loose_bbox(shape, img):
+    max_x = min(shape[2], img.shape[1])
+    min_x = max(shape[0], 0)
+    max_y = min(shape[3], img.shape[0])
+    min_y = max(shape[1], 0)
+    
+    Lx = max_x - min_x
+    Ly = max_y - min_y
+    
+    Lmax = int(max(Lx, Ly) * 2.0)
+    
+    delta = Lmax * 0.4
+    
+    center_x = (shape[2] + shape[0]) // 2
+    center_y = (shape[3] + shape[1]) // 2
+    start_x = int(center_x - delta)
+    start_y = int(center_y - delta - 10)
+    end_x = int(center_x + delta)
+    end_y = int(center_y + delta - 10)
+    
+    if start_y < 0:
+        start_y = 0
+    if start_x < 0:
+        start_x = 0
+    if end_x > img.shape[1]:
+        end_x = img.shape[1]
+    if end_y > img.shape[0]:
+        end_y = img.shape[0]
+
+    return (start_x, start_y, end_x, end_y)

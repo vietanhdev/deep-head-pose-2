@@ -5,7 +5,6 @@ import scipy.io as sio
 import utils
 import random
 
-
 def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8, val_ratio=0.15):
     with open(samples_file) as samples_fp:
         lines = samples_fp.readlines()
@@ -69,15 +68,17 @@ class Biwi:
         # else:
         #     x_min, x_max, y_min, y_max = [float(line[0]), float(line[1]), float(line[2]), float(line[3])]
         # bbox.close()
-        x_min, x_max, y_min, y_max = 0, img.shape[0], 0, img.shape[1]
+        # x_min, x_max, y_min, y_max = 0, img.shape[0], 0, img.shape[1]
     
-        # Loosely crop face
-        k = 0.3
-        x_min -= k * abs(x_max - x_min)
-        y_min -= k * abs(y_max - y_min)
-        x_max += k * abs(x_max - x_min)
-        y_max += k * abs(y_max - y_min)
-        crop_img = img[int(y_min): int(y_max), int(x_min): int(x_max)]
+        # # Loosely crop face
+        # k = 0.3
+        # x_min -= k * abs(x_max - x_min)
+        # y_min -= k * abs(y_max - y_min)
+        # x_max += k * abs(x_max - x_min)
+        # y_max += k * abs(y_max - y_min)
+        # crop_img = img[int(y_min): int(y_max), int(x_min): int(x_max)]
+
+        crop_img = self.face_detector.get_face(img, bbox_path)
         
         # print(crop_img.shape)
         # cv2.imshow('crop_img', crop_img)
