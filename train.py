@@ -39,7 +39,7 @@ EPOCHS = 1
 dataset = datasets.Biwi(args.data_dir, 'filename_list_filtered.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, train_ratio=0.8, val_ratio=0.15)
 
 # Build model
-net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, learning_rate=0.0001)
+net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, learning_rate=0.001)
 
 # Train model
 net.train(args.model_file, max_epoches=EPOCHS, load_weight=False, tf_board_log_dir="./logs")

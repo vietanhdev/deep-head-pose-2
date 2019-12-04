@@ -4,6 +4,7 @@ import cv2
 import scipy.io as sio
 import utils
 import random
+import textwrap
 
 def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8, val_ratio=0.15):
     with open(samples_file) as samples_fp:
@@ -38,8 +39,15 @@ def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8
     return train_num, val_num, test_num
                 
 def get_list_from_filenames(file_path):
-    with open(file_path) as f:
-        lines = f.read().splitlines()
+    lines = []
+    with open(file_path) as fp:
+        content = fp.read()
+        lines = content.split("\n")
+    for l in lines:
+        if len(l) > 14:
+            wrapped = textwrap.wrap(l, 14)
+            lines += wrapped
+    lines = [l for l in lines if l != "" and len(l) <= 14]
     return lines
 
 
@@ -127,7 +135,7 @@ class Biwi:
         self.train_file = train_file
         self.val_file = val_file
         self.test_file = test_file
-        return split_samples(os.path.join(self.data_dir, self.data_file), train_file, val_file, test_file, train_ratio=train_ratio, val_ratio=train_ratio)
+        return split_samples(os.path.join(self.data_dir, self.data_file), train_file, val_file, test_file, train_ratio=train_ratio, val_ratio=val_ratio)
     
     def train_num(self):
         return self.train_num
