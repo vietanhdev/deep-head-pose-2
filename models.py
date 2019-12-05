@@ -4,6 +4,8 @@ import numpy as np
 import cv2
 import scipy.io as sio
 import utils
+import math
+from tensorflow.keras.callbacks import LearningRateScheduler
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, DepthwiseConv2D, GlobalAveragePooling2D
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from tensorflow.keras import callbacks
@@ -231,15 +233,25 @@ class HeadPoseNet:
             # Define the callbacks for training
             tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
             mc = ModelCheckpoint(filepath=model_path, save_weights_only=True, save_format="h5", verbose=2)
+            def step_decay(epoch):
+                initial_lrate = 0.0001
+                drop = 0.5
+                epochs_drop = 10.0
+                lrate = initial_lrate * math.pow(drop,  
+                        math.floor((1+epoch)/epochs_drop))
+                return lrate
+            lr = LearningRateScheduler(step_decay)
             
-            self.model.fit_generator(generator=self.dataset.data_generator(partition="train"),
+            train_gen = self.dataset.get_data_generator(partition="train")
+            val_gen = self.dataset.get_data_generator(partition="val")
+            self.model.fit_generator(generator=train_gen,
                                     epochs=max_epoches,
                                     steps_per_epoch=self.dataset.train_num // self.batch_size,
-                                    validation_data=self.dataset.data_generator(partition="val"),
+                                    validation_data=val_gen,
                                     validation_steps=self.dataset.val_num // self.batch_size,
                                     max_queue_size=10,
-                                    workers=1,
-                                    callbacks=[tb, mc],
+                                    workers=8,
+                                    callbacks=[tb, mc, lr],
                                     verbose=1)
             
     def test(self, save_dir):

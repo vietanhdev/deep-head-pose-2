@@ -5,6 +5,8 @@ import scipy.io as sio
 import utils
 import random
 import textwrap
+from tensorflow.keras.utils import Sequence
+import math
 
 def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8, val_ratio=0.15):
     with open(samples_file) as samples_fp:
@@ -51,19 +53,86 @@ def get_list_from_filenames(file_path):
     return lines
 
 
-class Biwi:
-    def __init__(self, data_dir, data_file, batch_size=64, input_size=64, train_ratio=0.8, val_ratio=0.15):
-        self.data_dir = data_dir
-        self.data_file = data_file
+IMAGE_ORDERING = 'channels_last'
+
+class DataSequence(Sequence):
+
+    def __init__(self, data_dir, sample_file, batch_size, input_size=128, shuffle=True, return_filename=False):
+        """
+        Keras Sequence object to train a model on larger-than-memory data.
+        """
+
+        self.sample_file = sample_file
         self.batch_size = batch_size
         self.input_size = input_size
-        self.train_file = None
-        self.test_file = None
-        self.__gen_filename_list(os.path.join(self.data_dir, self.data_file))
-        self.train_num, self.val_num, self.test_num = self.__gen_train_test_file(os.path.join(self.data_dir, 'train.txt'),
-            os.path.join(self.data_dir, 'val.txt'),
-            os.path.join(self.data_dir, 'test.txt'), train_ratio=train_ratio, val_ratio=val_ratio)
-        
+        self.filenames = get_list_from_filenames(sample_file)
+        self.file_num = len(self.filenames)
+        self.return_filename = return_filename
+        self.data_dir = data_dir
+
+        if shuffle:
+            idx = np.random.permutation(range(self.file_num))
+            self.filenames = np.array(self.filenames)[idx]
+        self.max_num = self.file_num - (self.file_num % self.batch_size)
+     
+       
+    def __len__(self):
+        """
+        Number of batch in the Sequence.
+        :return: The number of batches in the Sequence.
+        """
+        return int(math.ceil(len(self.filenames) / float(self.batch_size)))
+
+    def __getitem__(self, idx):
+        """
+        Retrieve the mask and the image in batches at position idx
+        :param idx: position of the batch in the Sequence.
+        :return: batches of image and the corresponding mask
+        """
+
+        batch_filenames = self.filenames[idx * self.batch_size: (1 + idx) * self.batch_size]
+
+        batch_x = []
+        batch_yaw = []
+        batch_pitch = []
+        batch_roll = []
+        batch_landmark = []
+        names = []
+
+        for filename in batch_filenames:
+            img = self.__get_input_img(self.data_dir, filename)
+            bin_labels, cont_labels = self.__get_input_label(self.data_dir, filename)
+
+            # Load landmark
+            landmark_path = os.path.join(
+                self.data_dir, "{}_landmark.txt".format(filename))
+            landmark = []
+            with open(landmark_path, "r") as text_file:
+                for _ in range(5): # 5 Points
+                    line = text_file.readline()
+                    point = [float(x) for x in line.split()]
+                    landmark.append(point[0])
+                    landmark.append(point[1])
+                landmark = np.array(landmark)
+
+            batch_x.append(img)
+            batch_yaw.append([bin_labels[0], cont_labels[0]])
+            batch_pitch.append([bin_labels[1], cont_labels[1]])
+            batch_roll.append([bin_labels[2], cont_labels[2]])
+            batch_landmark.append(landmark)
+            names.append(filename)
+
+        batch_x = np.array(batch_x, dtype=np.float32)
+        batch_yaw = np.array(batch_yaw)
+        batch_pitch = np.array(batch_pitch)
+        batch_roll = np.array(batch_roll)
+        batch_landmark = np.array(batch_landmark)
+
+        if self.return_filename:
+            return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names
+        else:
+            return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
+
     def __get_input_img(self, data_dir, file_name, img_ext='.png', annot_ext='.txt'):
         img = cv2.imread(os.path.join(data_dir, file_name + '_rgb' + img_ext))
         bbox_path = os.path.join(
@@ -81,8 +150,7 @@ class Biwi:
         normed_img = (crop_img - crop_img.mean())/crop_img.std()
         
         return normed_img
-        
-    
+
     def __get_input_label(self, data_dir, file_name, annot_ext='.txt'):
         # Load pose in degrees
         pose_path = os.path.join(data_dir, file_name + '_pose' + annot_ext)
@@ -114,8 +182,22 @@ class Biwi:
         binned_labels = np.digitize([yaw, pitch, roll], bins) - 1
     
         cont_labels = [yaw, pitch, roll]
-    
+
         return binned_labels, cont_labels
+
+
+class Biwi:
+    def __init__(self, data_dir, data_file, batch_size=64, input_size=64, train_ratio=0.8, val_ratio=0.15):
+        self.data_dir = data_dir
+        self.data_file = data_file
+        self.batch_size = batch_size
+        self.input_size = input_size
+        self.train_file = None
+        self.test_file = None
+        self.__gen_filename_list(os.path.join(self.data_dir, self.data_file))
+        self.train_num, self.val_num, self.test_num = self.__gen_train_test_file(os.path.join(self.data_dir, 'train.txt'),
+            os.path.join(self.data_dir, 'val.txt'),
+            os.path.join(self.data_dir, 'test.txt'), train_ratio=train_ratio, val_ratio=val_ratio)
 
     def __gen_filename_list(self, filename_list_file):
         if not os.path.exists(filename_list_file):
@@ -158,63 +240,18 @@ class Biwi:
         # print(save_path)
         cv2.imwrite(save_path, cv2_img)
         
-    def data_generator(self, shuffle=True, partition="train"):
+    def get_data_generator(self, shuffle=True, partition="train"):
         sample_file = self.train_file
         if partition == "test":
             sample_file = self.test_file
         elif partition == "val":
             sample_file = self.val_file
-    
-        filenames = get_list_from_filenames(sample_file)
-        file_num = len(filenames)
-        
-        while True:
-            if shuffle and partition != "test":
-                idx = np.random.permutation(range(file_num))
-                filenames = np.array(filenames)[idx]
-            max_num = file_num - (file_num % self.batch_size)
-            for i in range(0, max_num, self.batch_size):
-                batch_x = []
-                batch_yaw = []
-                batch_pitch = []
-                batch_roll = []
-                batch_landmark = []
-                names = []
-                for j in range(self.batch_size):
-                    img = self.__get_input_img(self.data_dir, filenames[i + j])
-                    bin_labels, cont_labels = self.__get_input_label(self.data_dir, filenames[i + j])
-                    
-                    # Load landmark
-                    landmark_path = os.path.join(
-                        self.data_dir, "{}_landmark.txt".format(filenames[i + j]))
-                    landmark = []
-                    with open(landmark_path, "r") as text_file:
-                        for _ in range(5): # 5 Points
-                            line = text_file.readline()
-                            point = [float(x) for x in line.split()]
-                            landmark.append(point[0])
-                            landmark.append(point[1])
-                        landmark = np.array(landmark)
 
-                    batch_x.append(img)
-                    batch_yaw.append([bin_labels[0], cont_labels[0]])
-                    batch_pitch.append([bin_labels[1], cont_labels[1]])
-                    batch_roll.append([bin_labels[2], cont_labels[2]])
-                    batch_landmark.append(landmark)
-                    names.append(filenames[i + j])
-                    
-                batch_x = np.array(batch_x, dtype=np.float32)
-                batch_yaw = np.array(batch_yaw)
-                batch_pitch = np.array(batch_pitch)
-                batch_roll = np.array(batch_roll)
-                batch_landmark = np.array(batch_landmark)
-                
-                if partition == "test":
-                    yield (batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names)
-                else:
-                    yield (batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark])
-            if partition == "test":
-                break
+        if partition == "test":
+            shuffle = False
+        else:
+            shuffle = True
+        return DataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle, return_filename=(partition == "test"))
 
 # NOTE!!!! Not yet supported
 # class AFLW2000:
