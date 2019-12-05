@@ -3,26 +3,26 @@ import os
 import numpy as np
 import cv2
 import scipy.io as sio
-import dlib
 from imutils import face_utils
 
 import datasets
 import utils
 import models
 import utils
+from RetinaFace.retinaface import RetinaFace
 
 import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-m',
-    '--model_file', default="./models/shuffle_net_dhp.h5",
+    '--model_file', default="./models/shuffle_net_dhp_test18.h5",
     help='Output model file')
 args = parser.parse_args()
 
 BIN_NUM = 66
 INPUT_SIZE = 128
-BATCH_SIZE=16
+BATCH_SIZE = 16
 
 net = models.HeadPoseNet(None, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE)
 net.train(args.model_file, load_weight=True)
@@ -33,17 +33,17 @@ if not cap.isOpened():
     exit(-1)
     
     
-face_detector = dlib.get_frontal_face_detector()
-
+face_detector = RetinaFace('./RetinaFace/retinaface-R50', 0, 0, 'net3')
 
 while cap.isOpened():
     ret, frame = cap.read()
     if ret:
-        face_rects = face_detector(frame, 0)
-        if len(face_rects) > 0:
+        faces, landmarks = face_detector.detect(
+            frame, 0.8, scales=[1.0], do_flip=False)
 
-            face = face_rects[0]
-            bbox = (face.left(), face.top(), face.right(), face.bottom())
+        if len(faces) > 0:
+            bbox = faces[0]
+            bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
 
             face_crop = utils.crop_face_loosely(bbox, frame, INPUT_SIZE)
             face_box, _, _ = utils.get_loose_bbox(bbox, frame, INPUT_SIZE)
@@ -53,19 +53,19 @@ while cap.isOpened():
             if len(frames) == 1:
                 # print(shape[30])
                 pred_cont_yaw, pred_cont_pitch, pred_cont_roll, landmark = net.test_online(frames)
-                print((pred_cont_yaw, pred_cont_pitch, pred_cont_roll))
 
-                cv2_img = utils.draw_axis(frame, pred_cont_yaw, pred_cont_pitch, pred_cont_roll, tdx=bbox[0],
+                draw = cv2.rectangle(frame, (face_box[0], face_box[1]), (face_box[2], face_box[3]), (0,0,255), 2)
+                draw = utils.draw_axis(draw, pred_cont_yaw, pred_cont_pitch, pred_cont_roll, tdx=bbox[0],
                                           tdy=bbox[1], size=100)
 
-                x = landmark[0]
-                y = landmark[1]
-                print(face_box)
-                x, y = utils.get_original_landmark_point(x, y, face_box, 128)
-                print((x, y))
-                cv2_img = cv2.circle(cv2_img, (x+128, y+128), 2, (255, 0, 0), 2)
 
-                cv2.imshow("cv2_img", cv2_img)
+                for i in range(5):
+                    x = landmark[2 * i]
+                    y = landmark[2 * i + 1]
+                    x, y = utils.get_original_landmark_point(x, y, face_box, 128)
+                    draw = cv2.circle(draw, (x, y), 2, (255, 0, 0), 2)
+
+                cv2.imshow("Result", draw)
                 frames = []
                 
             # cv2.waitKey(0)
