@@ -256,11 +256,10 @@ class HeadPoseNet:
     def test_online(self, face_imgs):
         batch_x = np.array(face_imgs, dtype=np.float32)
         predictions = self.model.predict(batch_x, batch_size=1, verbose=1)
-        predictions = np.asarray(predictions)
-        # print(predictions)
-        pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0, :, :]) * self.idx_tensor, axis=1) * 3 - 99
-        pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[1, :, :]) * self.idx_tensor, axis=1) * 3 - 99
-        pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[2, :, :]) * self.idx_tensor, axis=1) * 3 - 99
+        headpose_preds = np.array(predictions[:3], dtype=np.float32)
+        pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[0, :, :]) * self.idx_tensor, axis=1) * 3 - 99
+        pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[1, :, :]) * self.idx_tensor, axis=1) * 3 - 99
+        pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[2, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_landmark = predictions[3]
 
-        return pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0], pred_landmark
+        return float(pred_cont_yaw[0]), float(pred_cont_pitch[0]), float(pred_cont_roll[0]), pred_landmark[0]
