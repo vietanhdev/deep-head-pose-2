@@ -278,7 +278,3 @@ class HeadPoseNet:
 
         return pred_cont_yaw, pred_cont_pitch, pred_cont_roll, pred_landmark
 
-            
-    def test_online(self, face_imgs):
-        batch_yaw, batch_pitch, batch_roll, batch_landmark = self.predict_batch(face_imgs)
-        return batch_yaw, batch_pitch, batch_roll, batch_landmark

@@ -55,7 +55,7 @@ while cap.isOpened():
 
             if len(face_crops) > 0:
 
-                batch_yaw, batch_pitch, batch_roll, batch_landmark = net.test_online(face_crops)
+                batch_yaw, batch_pitch, batch_roll, batch_landmark = net.predict_batch(face_crops)
 
                 draw = frame.copy()
 
