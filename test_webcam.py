@@ -42,34 +42,43 @@ while cap.isOpened():
             frame, 0.8, scales=[1.0], do_flip=False)
 
         if len(faces) > 0:
-            bbox = faces[0]
-            bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
 
-            face_crop = utils.crop_face_loosely(bbox, frame, INPUT_SIZE)
-            face_crop = np.asarray(face_crop)
-            normed_face_crop = (face_crop - face_crop.mean())/face_crop.std()
-            face_box, _, _ = utils.get_loose_bbox(bbox, frame, INPUT_SIZE)
-            
-            frames = []
-            frames.append(normed_face_crop)
-            if len(frames) == 1:
-                # print(shape[30])
-                pred_cont_yaw, pred_cont_pitch, pred_cont_roll, landmark = net.test_online(frames)
+            face_crops = []
+            face_boxes = []
+            for i in range(len(faces)):
+                bbox = faces[i]
+                bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
+                face_crop = utils.crop_face_loosely(bbox, frame, INPUT_SIZE)
+                face_box, _, _ = utils.get_loose_bbox(bbox, frame, INPUT_SIZE)
+                face_boxes.append(face_box)
+                face_crops.append(face_crop)
 
-                draw = cv2.rectangle(frame, (face_box[0], face_box[1]), (face_box[2], face_box[3]), (0,0,255), 2)
-                draw = utils.draw_axis(draw, pred_cont_yaw, pred_cont_pitch, pred_cont_roll, tdx=bbox[0],
-                                          tdy=bbox[1], size=100)
+            if len(face_crops) > 0:
 
+                batch_yaw, batch_pitch, batch_roll, batch_landmark = net.test_online(face_crops)
 
-                for i in range(5):
-                    x = landmark[2 * i]
-                    y = landmark[2 * i + 1]
-                    x, y = utils.get_original_landmark_point(x, y, face_box, 128)
-                    draw = cv2.circle(draw, (x, y), 2, (255, 0, 0), 2)
+                draw = frame.copy()
+
+                for i in range(batch_yaw.shape[0]):
+                    yaw = batch_yaw[i]
+                    pitch = batch_pitch[i]
+                    roll = batch_roll[i]
+                    landmark = batch_landmark[i]
+
+                    draw = cv2.rectangle(draw, (face_boxes[i][0], face_boxes[i][1]), (face_boxes[i][2], face_boxes[i][3]), (0,0,255), 2)
+
+                    face_box_width = face_boxes[i][2]-face_boxes[i][0]
+                    axis_x, axis_y = utils.get_original_landmark_point(landmark[4], landmark[5], face_boxes[i], 128)
+                    draw = utils.draw_axis(draw, yaw, pitch, roll, tdx=face_boxes[i][0] + face_box_width // 5,
+                                            tdy=face_boxes[i][1] + face_box_width // 5, size=face_box_width // 2)
+                
+                    for j in range(5):
+                        x = landmark[2 * j]
+                        y = landmark[2 * j + 1]
+                        x, y = utils.get_original_landmark_point(x, y, face_boxes[i], 128)
+                        draw = cv2.circle(draw, (x, y), 2, (255, 0, 0), 2)
 
                 cv2.imshow("Result", draw)
-                frames = []
                 
-            # cv2.waitKey(0)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break

@@ -263,14 +263,22 @@ class HeadPoseNet:
             pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[2,:,:]) * self.idx_tensor, axis=1) * 3 - 99
             
             self.dataset.save_test(names[0], save_dir, [pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0], batch_landmark[0]])
-            
-    def test_online(self, face_imgs):
-        batch_x = np.array(face_imgs, dtype=np.float32)
-        predictions = self.model.predict(batch_x, batch_size=1, verbose=1)
+
+    def predict_batch(self, face_imgs):
+        image_batch = np.array(face_imgs, dtype=np.float32)
+        image_batch = np.asarray(image_batch)
+        normed_image_batch = (image_batch - image_batch.mean())/image_batch.std()
+        
+        predictions = self.model.predict(normed_image_batch, batch_size=1, verbose=1)
         headpose_preds = np.array(predictions[:3], dtype=np.float32)
         pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[0, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[1, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[2, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_landmark = predictions[3]
 
-        return float(pred_cont_yaw[0]), float(pred_cont_pitch[0]), float(pred_cont_roll[0]), pred_landmark[0]
+        return pred_cont_yaw, pred_cont_pitch, pred_cont_roll, pred_landmark
+
+            
+    def test_online(self, face_imgs):
+        batch_yaw, batch_pitch, batch_roll, batch_landmark = self.predict_batch(face_imgs)
+        return batch_yaw, batch_pitch, batch_roll, batch_landmark
