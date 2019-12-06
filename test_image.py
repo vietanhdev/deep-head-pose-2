@@ -17,7 +17,7 @@ from RetinaFace.retinaface import RetinaFace
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-m',
-    '--model_file', default="./models/shuffle_net_dhp_test30.h5",
+    '--model_file', default="./models/shuffle_net_dhp_test50.h5",
     help='Output model file')
 args = parser.parse_args()
 
@@ -33,7 +33,7 @@ face_detector = RetinaFace('./RetinaFace/retinaface-R50', 0, 0, 'net3')
 
 
 frame = cv2.imread(
-    "/mnt/DATA/GR/MAIN_STREAM/deep-head-pose/data/kinect_head_pose_db/hpdb/01/frame_00003_rgb.png")
+    "/mnt/DATA/GR/MAIN_STREAM/deep-head-pose/data/kinect_head_pose_db/hpdb/07/frame_00350_rgb.png")
 faces, landmarks = face_detector.detect(
     frame, 0.8, scales=[1.0], do_flip=False)
 
@@ -42,10 +42,12 @@ if len(faces) > 0:
     bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
 
     face_crop = utils.crop_face_loosely(bbox, frame, INPUT_SIZE)
+    face_crop = np.asarray(face_crop)
+    normed_face_crop = (face_crop - face_crop.mean())/face_crop.std()
     face_box, _, _ = utils.get_loose_bbox(bbox, frame, INPUT_SIZE)
 
     frames = []
-    frames.append(face_crop)
+    frames.append(normed_face_crop)
     if len(frames) == 1:
         # print(shape[30])
         pred_cont_yaw, pred_cont_pitch, pred_cont_roll, landmark = net.test_online(

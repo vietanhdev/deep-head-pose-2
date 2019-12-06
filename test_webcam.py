@@ -46,10 +46,12 @@ while cap.isOpened():
             bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
 
             face_crop = utils.crop_face_loosely(bbox, frame, INPUT_SIZE)
+            face_crop = np.asarray(face_crop)
+            normed_face_crop = (face_crop - face_crop.mean())/face_crop.std()
             face_box, _, _ = utils.get_loose_bbox(bbox, frame, INPUT_SIZE)
             
             frames = []
-            frames.append(face_crop)
+            frames.append(normed_face_crop)
             if len(frames) == 1:
                 # print(shape[30])
                 pred_cont_yaw, pred_cont_pitch, pred_cont_roll, landmark = net.test_online(frames)
