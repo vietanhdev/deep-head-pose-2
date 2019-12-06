@@ -3,7 +3,6 @@ import numpy as np
 import cv2
 import scipy.io as sio
 from math import cos, sin
-import dlib
 from imutils import face_utils
 
 def get_list_from_filenames(file_path):

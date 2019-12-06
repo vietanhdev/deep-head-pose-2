@@ -5,7 +5,6 @@ import os
 import numpy as np
 import cv2
 import scipy.io as sio
-import dlib
 from imutils import face_utils
 
 import datasets
