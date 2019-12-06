@@ -254,27 +254,44 @@ class HeadPoseNet:
                                     callbacks=[tb, mc, lr],
                                     verbose=1)
             
-    def test(self, save_dir):
-        for i, (images, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names) in enumerate(self.dataset.get_data_generator(partition="test")):
-            predictions = self.model.predict(images, batch_size=self.batch_size, verbose=1)
-            predictions = np.asarray(predictions)
-            pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0,:,:]) * self.idx_tensor, axis=1) * 3 - 99
-            pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[1,:,:]) * self.idx_tensor, axis=1) * 3 - 99
-            pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[2,:,:]) * self.idx_tensor, axis=1) * 3 - 99
-            
-            self.dataset.save_test(names[0], save_dir, [pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0], batch_landmark[0]])
+    def test(self):
+        yaw_error = .0
+        pitch_error = .0
+        roll_error = .0
+        landmark_error = .0
+        test_gen = self.dataset.get_data_generator(partition="test")
+        for images, [batch_yaw, batch_pitch, batch_roll, batch_landmark] in test_gen:
+            batch_yaw_pred, batch_pitch_pred, batch_roll_pred, batch_landmark_pred = self.predict_batch(images)
 
-    def predict_batch(self, face_imgs):
-        image_batch = np.array(face_imgs, dtype=np.float32)
-        image_batch = np.asarray(image_batch)
-        normed_image_batch = (image_batch - image_batch.mean())/image_batch.std()
+            batch_yaw = batch_yaw[:, 1]
+            batch_pitch = batch_pitch[:, 1]
+            batch_roll = batch_roll[:, 1]
+    
+            # Mean absolute error
+            yaw_error += np.sum(np.abs(batch_yaw - batch_yaw_pred))
+            pitch_error += np.sum(np.abs(batch_pitch - batch_pitch_pred))
+            roll_error += np.sum(np.abs(batch_roll - batch_roll_pred))
+            landmark_error += np.sum(np.abs(batch_landmark - batch_landmark_pred))
+
+        print("### MAE: ")
+        print("- Yaw MAE: {}".format(yaw_error / len(test_gen)))
+        print("- Pitch MAE: {}".format(pitch_error / len(test_gen)))
+        print("- Roll MAE: {}".format(roll_error / len(test_gen)))
+        print("- Landmark MAE: {}".format(landmark_error / len(test_gen)))
         
-        predictions = self.model.predict(normed_image_batch, batch_size=1, verbose=1)
+
+    def predict_batch(self, face_imgs, verbose=1):
+        normed_image_batch = self.normalize_img_batch(face_imgs)
+        predictions = self.model.predict(normed_image_batch, batch_size=1, verbose=verbose)
         headpose_preds = np.array(predictions[:3], dtype=np.float32)
         pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[0, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[1, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[2, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_landmark = predictions[3]
-
         return pred_cont_yaw, pred_cont_pitch, pred_cont_roll, pred_landmark
 
+    def normalize_img_batch(self, face_imgs):
+        image_batch = np.array(face_imgs, dtype=np.float32)
+        image_batch = np.asarray(image_batch)
+        normed_image_batch = (image_batch - image_batch.mean())/image_batch.std()
+        return normed_image_batch

@@ -57,7 +57,7 @@ IMAGE_ORDERING = 'channels_last'
 
 class DataSequence(Sequence):
 
-    def __init__(self, data_dir, sample_file, batch_size, input_size=128, shuffle=True, return_filename=False):
+    def __init__(self, data_dir, sample_file, batch_size, input_size=128, shuffle=True):
         """
         Keras Sequence object to train a model on larger-than-memory data.
         """
@@ -67,7 +67,6 @@ class DataSequence(Sequence):
         self.input_size = input_size
         self.filenames = get_list_from_filenames(sample_file)
         self.file_num = len(self.filenames)
-        self.return_filename = return_filename
         self.data_dir = data_dir
 
         if shuffle:
@@ -97,7 +96,6 @@ class DataSequence(Sequence):
         batch_pitch = []
         batch_roll = []
         batch_landmark = []
-        names = []
 
         for filename in batch_filenames:
             img = self.__get_input_img(self.data_dir, filename)
@@ -120,7 +118,6 @@ class DataSequence(Sequence):
             batch_pitch.append([bin_labels[1], cont_labels[1]])
             batch_roll.append([bin_labels[2], cont_labels[2]])
             batch_landmark.append(landmark)
-            names.append(filename)
 
         batch_x = np.array(batch_x, dtype=np.float32)
         batch_yaw = np.array(batch_yaw)
@@ -128,10 +125,7 @@ class DataSequence(Sequence):
         batch_roll = np.array(batch_roll)
         batch_landmark = np.array(batch_landmark)
 
-        if self.return_filename:
-            return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names
-        else:
-            return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
+        return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
 
     def __get_input_img(self, data_dir, file_name, img_ext='.png', annot_ext='.txt'):
         img = cv2.imread(os.path.join(data_dir, file_name + '_rgb' + img_ext))
@@ -251,4 +245,4 @@ class Biwi:
             shuffle = False
         else:
             shuffle = True
-        return DataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle, return_filename=(partition == "test"))
+        return DataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle)
