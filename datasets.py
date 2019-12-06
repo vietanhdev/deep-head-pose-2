@@ -7,6 +7,8 @@ import random
 import textwrap
 from tensorflow.keras.utils import Sequence
 import math
+from augmentation import augment_img
+import random
 
 def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8, val_ratio=0.15):
     with open(samples_file) as samples_fp:
@@ -53,11 +55,9 @@ def get_list_from_filenames(file_path):
     return lines
 
 
-IMAGE_ORDERING = 'channels_last'
-
 class DataSequence(Sequence):
 
-    def __init__(self, data_dir, sample_file, batch_size, input_size=128, shuffle=True):
+    def __init__(self, data_dir, sample_file, batch_size, input_size=128, shuffle=True, augment=False):
         """
         Keras Sequence object to train a model on larger-than-memory data.
         """
@@ -68,6 +68,7 @@ class DataSequence(Sequence):
         self.filenames = get_list_from_filenames(sample_file)
         self.file_num = len(self.filenames)
         self.data_dir = data_dir
+        self.augment = augment
 
         if shuffle:
             idx = np.random.permutation(range(self.file_num))
@@ -98,7 +99,7 @@ class DataSequence(Sequence):
         batch_landmark = []
 
         for filename in batch_filenames:
-            img = self.__get_input_img(self.data_dir, filename)
+            img = self.__get_input_img(self.data_dir, filename, augment=self.augment)
             bin_labels, cont_labels = self.__get_input_label(self.data_dir, filename)
 
             # Load landmark
@@ -127,8 +128,16 @@ class DataSequence(Sequence):
 
         return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
 
-    def __get_input_img(self, data_dir, file_name, img_ext='.png', annot_ext='.txt'):
+    def __get_input_img(self, data_dir, file_name, img_ext='.png', annot_ext='.txt', augment=False):
         img = cv2.imread(os.path.join(data_dir, file_name + '_rgb' + img_ext))
+
+        if augment:
+            img = augment_img(img)
+
+            # Uncomment following lines to write out augmented images for debuging
+            # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)
+            # cv2.waitKey(0)
+
         bbox_path = os.path.join(
             data_dir, "{}_bbox.txt".format(file_name))
 
@@ -243,6 +252,8 @@ class Biwi:
 
         if partition == "test":
             shuffle = False
+            augment = False
         else:
             shuffle = True
-        return DataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle)
+            augment = True
+        return DataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle, augment=augment)
