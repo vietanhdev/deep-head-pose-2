@@ -232,7 +232,7 @@ class HeadPoseNet:
         else:
             # Define the callbacks for training
             tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
-            mc = ModelCheckpoint(filepath=model_path, save_weights_only=True, save_format="h5", verbose=2)
+            mc = ModelCheckpoint(filepath=model_path + "_{epoch:02d}_{val_loss:.2f}.h5", save_weights_only=True, save_format="h5", verbose=2)
             def step_decay(epoch):
                 initial_lrate = 0.0001
                 drop = 0.5
@@ -261,7 +261,6 @@ class HeadPoseNet:
             pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0,:,:]) * self.idx_tensor, axis=1) * 3 - 99
             pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[1,:,:]) * self.idx_tensor, axis=1) * 3 - 99
             pred_cont_roll = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[2,:,:]) * self.idx_tensor, axis=1) * 3 - 99
-            # print(pred_cont_yaw.shape)
             
             self.dataset.save_test(names[0], save_dir, [pred_cont_yaw[0], pred_cont_pitch[0], pred_cont_roll[0], batch_landmark[0]])
             
