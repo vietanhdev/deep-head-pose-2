@@ -33,7 +33,7 @@ face_detector = RetinaFace('./RetinaFace/retinaface-R50', 0, 0, 'net3')
 
 
 frame = cv2.imread(
-    "/mnt/DATA/GR/MAIN_STREAM/deep-head-pose/data/kinect_head_pose_db/hpdb/07/frame_00350_rgb.png")
+    "./data/kinect_head_pose_db/hpdb/07/frame_00350_rgb.png")
 faces, landmarks = face_detector.detect(
     frame, 0.8, scales=[1.0], do_flip=False)
 
