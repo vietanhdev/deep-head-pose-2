@@ -17,7 +17,7 @@ from RetinaFace.retinaface import RetinaFace
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-m',
-    '--model_file', default="./models/shuffle_net_dhp_test50.h5",
+    '--model_file', default="./models/shuffle_net_dhp_best_model.h5",
     help='Output model file')
 args = parser.parse_args()
 
