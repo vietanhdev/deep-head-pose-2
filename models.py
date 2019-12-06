@@ -255,7 +255,7 @@ class HeadPoseNet:
                                     verbose=1)
             
     def test(self, save_dir):
-        for i, (images, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names) in enumerate(self.dataset.data_generator(partition="test")):
+        for i, (images, [batch_yaw, batch_pitch, batch_roll, batch_landmark], names) in enumerate(self.dataset.get_data_generator(partition="test")):
             predictions = self.model.predict(images, batch_size=self.batch_size, verbose=1)
             predictions = np.asarray(predictions)
             pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(predictions[0,:,:]) * self.idx_tensor, axis=1) * 3 - 99
