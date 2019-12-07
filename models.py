@@ -221,7 +221,7 @@ class HeadPoseNet:
         }
         
         model.compile(optimizer=tf.optimizers.Adam(self.learning_rate),
-                        loss=losses, loss_weights=[0.025, 0.025, 0.1, 10])
+                        loss=losses, loss_weights=[1, 1, 1, 10000])
        
         return model
 
@@ -234,9 +234,9 @@ class HeadPoseNet:
             tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
             mc = ModelCheckpoint(filepath=model_path + "_{epoch:02d}_{val_loss:.2f}.h5", save_weights_only=True, save_format="h5", verbose=2)
             def step_decay(epoch):
-                initial_lrate = 0.0001
+                initial_lrate = 0.001
                 drop = 0.5
-                epochs_drop = 10.0
+                epochs_drop = 15.0
                 lrate = initial_lrate * math.pow(drop,  
                         math.floor((1+epoch)/epochs_drop))
                 return lrate
@@ -246,11 +246,11 @@ class HeadPoseNet:
             val_gen = self.dataset.get_data_generator(partition="val")
             self.model.fit_generator(generator=train_gen,
                                     epochs=max_epoches,
-                                    steps_per_epoch=self.dataset.train_num // self.batch_size,
+                                    steps_per_epoch=len(train_gen),
                                     validation_data=val_gen,
-                                    validation_steps=self.dataset.val_num // self.batch_size,
-                                    max_queue_size=10,
-                                    workers=8,
+                                    validation_steps=len(val_gen),
+                                    max_queue_size=32,
+                                    workers=16,
                                     callbacks=[tb, mc, lr],
                                     verbose=1)
             
