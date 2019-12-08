@@ -5,6 +5,7 @@ import cv2
 import scipy.io as sio
 import utils
 import math
+import time
 from tensorflow.keras.callbacks import LearningRateScheduler
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, DepthwiseConv2D, GlobalAveragePooling2D
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
@@ -259,9 +260,17 @@ class HeadPoseNet:
         pitch_error = .0
         roll_error = .0
         landmark_error = .0
+        total_time = .0
+        total_samples = 0
+
         test_gen = self.dataset.get_data_generator(partition="test")
         for images, [batch_yaw, batch_pitch, batch_roll, batch_landmark] in test_gen:
-            batch_yaw_pred, batch_pitch_pred, batch_roll_pred, batch_landmark_pred = self.predict_batch(images)
+
+            start_time = time.time()
+            batch_yaw_pred, batch_pitch_pred, batch_roll_pred, batch_landmark_pred = self.predict_batch(images, normalize=False)
+            total_time += time.time() - start_time
+            
+            total_samples += np.array(images).shape[0]
 
             batch_yaw = batch_yaw[:, 1]
             batch_pitch = batch_pitch[:, 1]
@@ -272,17 +281,24 @@ class HeadPoseNet:
             pitch_error += np.sum(np.abs(batch_pitch - batch_pitch_pred))
             roll_error += np.sum(np.abs(batch_roll - batch_roll_pred))
             landmark_error += np.sum(np.abs(batch_landmark - batch_landmark_pred))
+        
+        avg_time = total_time / total_samples
+        avg_fps = 1.0 / avg_time
 
         print("### MAE: ")
         print("- Yaw MAE: {}".format(yaw_error / len(test_gen)))
         print("- Pitch MAE: {}".format(pitch_error / len(test_gen)))
         print("- Roll MAE: {}".format(roll_error / len(test_gen)))
         print("- Landmark MAE: {}".format(landmark_error / len(test_gen)))
+        print("- Avg. FPS: {}".format(avg_fps))
         
 
-    def predict_batch(self, face_imgs, verbose=1):
-        normed_image_batch = self.normalize_img_batch(face_imgs)
-        predictions = self.model.predict(normed_image_batch, batch_size=1, verbose=verbose)
+    def predict_batch(self, face_imgs, verbose=1, normalize=True):
+        if normalize:
+            img_batch = self.normalize_img_batch(face_imgs)
+        else:
+            img_batch = np.array(face_imgs)
+        predictions = self.model.predict(img_batch, batch_size=1, verbose=verbose)
         headpose_preds = np.array(predictions[:3], dtype=np.float32)
         pred_cont_yaw = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[0, :, :]) * self.idx_tensor, axis=1) * 3 - 99
         pred_cont_pitch = tf.reduce_sum(input_tensor=tf.nn.softmax(headpose_preds[1, :, :]) * self.idx_tensor, axis=1) * 3 - 99

@@ -6,4 +6,15 @@
     + Add 5-point landmark as an output branch.
     + Use [Retina Face](https://github.com/deepinsight/insightface) to generate bounding box and landmark label automatically.
 
+- **Result:**
+    + Yaw MAE: 8.835566793169294
+    + Pitch MAE: 9.442807577094253
+    + Roll MAE: 10.96312210511188
+    + Landmark MAE: 0.7686509973820604
+    + Avg. FPS: **82** on CPU i5 9400
+
+- **Total loss (from tensorboard):**
+    + **Orange**: Train, **Blue**: Validation
+    ![epoch_loss](images/epoch_loss.svg)
+
 - The original Pytorch version: https://github.com/natanielruiz/deep-head-pose
