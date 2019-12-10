@@ -1,4 +1,4 @@
-name: dhp
+name: gr_dhp
 channels:
   - menpo
   - defaults

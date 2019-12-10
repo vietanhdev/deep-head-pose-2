@@ -16,7 +16,7 @@ from RetinaFace.retinaface import RetinaFace
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '-d',
-    '--data_dir', default="./data/kinect_head_pose_db/hpdb/",
+    '--data_dir', default="./data/BIWI/kinect_head_pose_db/hpdb/",
     help='Data directory')
 parser.add_argument(
     '-s',
