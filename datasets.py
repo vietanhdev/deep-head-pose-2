@@ -41,21 +41,10 @@ def split_samples(samples_file, train_file, val_file, test_file, train_ratio=0.8
                         test_fp.write(d)
                 data = []
     return train_num, val_num, test_num
-                
-def get_list_from_filenames(file_path):
-    lines = []
-    with open(file_path) as fp:
-        content = fp.read()
-        lines = content.split("\n")
-    for l in lines:
-        if len(l) > 14:
-            wrapped = textwrap.wrap(l, 14)
-            lines += wrapped
-    lines = [l for l in lines if l != "" and len(l) <= 14]
-    return lines
+            
 
 
-class DataSequence(Sequence):
+class BIWIDataSequence(Sequence):
 
     def __init__(self, data_dir, sample_file, batch_size, input_size=128, shuffle=True, augment=False):
         """
@@ -65,7 +54,7 @@ class DataSequence(Sequence):
         self.sample_file = sample_file
         self.batch_size = batch_size
         self.input_size = input_size
-        self.filenames = get_list_from_filenames(sample_file)
+        self.filenames = self.__get_list_from_filenames(sample_file)
         self.file_num = len(self.filenames)
         self.data_dir = data_dir
         self.augment = augment
@@ -189,6 +178,19 @@ class DataSequence(Sequence):
         return binned_labels, cont_labels
 
 
+    def __get_list_from_filenames(file_path):
+        lines = []
+        with open(file_path) as fp:
+            content = fp.read()
+            lines = content.split("\n")
+        for l in lines:
+            if len(l) > 14:
+                wrapped = textwrap.wrap(l, 14)
+                lines += wrapped
+        lines = [l for l in lines if l != "" and len(l) <= 14]
+        return lines
+
+
 class Biwi:
     def __init__(self, data_dir, data_file, batch_size=64, input_size=64, train_ratio=0.8, val_ratio=0.15):
         self.data_dir = data_dir
@@ -256,4 +258,4 @@ class Biwi:
         else:
             shuffle = True
             augment = True
-        return DataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle, augment=augment)
+        return BIWIDataSequence(self.data_dir, sample_file, self.batch_size, input_size=self.input_size, shuffle=shuffle, augment=augment)
