@@ -31,8 +31,8 @@ parser.add_argument(
     
 parser.add_argument(
     '-o',
-    '--output_file', default="./data/300W_LP.tfrecord",
-    help='Output file')
+    '--output_folder', default="./data/300W_LP_prepared/",
+    help='Output folder')
 
 args = parser.parse_args()
 
@@ -144,7 +144,7 @@ while True:
         x /= args.input_size
         y /= args.input_size
 
-        example["landmark"].append({'x': x, 'y': y})
+        example["landmark"].append([x, y])
 
     # We get the pose in radians
     pose = get_ypr_from_mat(os.path.join(args.data_dir, filenames[idx] + ".mat"))
@@ -163,4 +163,4 @@ while True:
 random.seed(42)
 random.shuffle(examples)
 
-write_tfrecord(examples, args.output_file)
+write_data_folder(examples, args.output_folder)

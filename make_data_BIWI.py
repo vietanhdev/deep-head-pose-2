@@ -31,7 +31,7 @@ parser.add_argument(
     
 parser.add_argument(
     '-o',
-    '--output_file', default="./data/BIWI.tfrecord",
+    '--output_folder', default="./data/BIWI_prepared/",
     help='Output file')
 
 args = parser.parse_args()
@@ -115,7 +115,7 @@ while True:
         x /= args.input_size
         y /= args.input_size
 
-        example["landmark"].append({'x': x, 'y': y})
+        example["landmark"].append([x, y])
 
     # cv2.imshow("Crop", draw)
     # cv2.waitKey(0)
@@ -156,4 +156,4 @@ while True:
 random.seed(42)
 random.shuffle(examples)
 
-write_tfrecord(examples, args.output_file)
+write_data_folder(examples, args.output_folder)
