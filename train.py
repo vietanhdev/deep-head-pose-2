@@ -16,9 +16,17 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '-s',
-    '--data_dir', default="./data/BIWI/kinect_head_pose_db/hpdb/",
-    help='Data directory')
+    '-t',
+    '--train_data_folder', default="./data/300W_LP_prepared/",
+    help='Train data directory')
+parser.add_argument(
+    '-v',
+    '--val_data_folder', default="./data/BIWI_prepared/",
+    help='Validation data directory')
+parser.add_argument(
+    '-e',
+    '--eval_data_folder', default="./data/BIWI_prepared/",
+    help='Test data directory')
 parser.add_argument(
     '-m',
     '--model_file', default="./models/shuffle_net_dhp.h5",
@@ -31,10 +39,12 @@ BATCH_SIZE = 16
 EPOCHS = 140
 
 # Prepare dataset
-dataset = datasets.Biwi(args.data_dir, 'filename_list_filtered.txt', batch_size=BATCH_SIZE, input_size=INPUT_SIZE, train_ratio=0.8, val_ratio=0.15)
+train_dataset = datasets.DataSequence(args.train_data_folder, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, shuffle=True, augment=True)
+val_dataset = datasets.DataSequence(args.val_data_folder, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, shuffle=True, augment=True)
+test_dataset = datasets.DataSequence(args.eval_data_folder, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, shuffle=True, augment=True)
 
 # Build model
-net = models.HeadPoseNet(dataset, BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, learning_rate=0.001)
+net = models.HeadPoseNet(train_dataset=train_dataset, val_dataset=val_dataset, test_dataset=test_dataset, bin_num=BIN_NUM, batch_size=BATCH_SIZE, input_size=INPUT_SIZE, learning_rate=0.001)
 
 # Train model
 net.train(args.model_file, max_epoches=EPOCHS, load_weight=False, tf_board_log_dir="./logs")

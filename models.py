@@ -170,14 +170,16 @@ class ShuffleNetv2(tf.keras.Model):
         return x
 
 class HeadPoseNet:
-    def __init__(self, dataset, class_num, batch_size, input_size, learning_rate=0.001):
+    def __init__(self, train_dataset=None, val_dataset=None, test_dataset=None, bin_num=66, batch_size=8, input_size=128, learning_rate=0.001):
         self.class_num = class_num
         self.batch_size = batch_size
         self.input_size = input_size
         self.learning_rate = learning_rate
         self.idx_tensor = [idx for idx in range(self.class_num)]
         self.idx_tensor = tf.Variable(np.array(self.idx_tensor, dtype=np.float32))
-        self.dataset = dataset
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
+        self.test_dataset = test_dataset
         self.model = self.__create_model()
         
     def __loss_angle(self, y_true, y_pred, alpha=0.5):
@@ -243,13 +245,11 @@ class HeadPoseNet:
                 return lrate
             lr = LearningRateScheduler(step_decay)
             
-            train_gen = self.dataset.get_data_generator(partition="train")
-            val_gen = self.dataset.get_data_generator(partition="val")
-            self.model.fit_generator(generator=train_gen,
+            self.model.fit_generator(generator=self.train_dataset,
                                     epochs=max_epoches,
-                                    steps_per_epoch=len(train_gen),
-                                    validation_data=val_gen,
-                                    validation_steps=len(val_gen),
+                                    steps_per_epoch=len(self.train_dataset),
+                                    validation_data=self.val_dataset,
+                                    validation_steps=len(self.val_dataset),
                                     max_queue_size=32,
                                     workers=16,
                                     callbacks=[tb, mc, lr],
@@ -263,7 +263,7 @@ class HeadPoseNet:
         total_time = .0
         total_samples = 0
 
-        test_gen = self.dataset.get_data_generator(partition="test")
+        test_gen = self.test_dataset
         for images, [batch_yaw, batch_pitch, batch_roll, batch_landmark] in test_gen:
 
             start_time = time.time()

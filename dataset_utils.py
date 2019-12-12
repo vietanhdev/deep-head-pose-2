@@ -19,7 +19,7 @@ def write_data_folder(examples, output_folder):
             image = cv2.imread(example['image_path'])
             bbox = example["face_bbox"]
             crop = image[bbox[0]:bbox[2], bbox[1]:bbox[3]]
-            cv2.imwrite(os.path.join(output_folder, str(i) + '.png'))
+            cv2.imwrite(os.path.join(output_folder, str(i) + '.png'), crop)
 
             # Bin values
             bins = list(range(-99, 99, 3))
