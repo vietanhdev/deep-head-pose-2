@@ -87,12 +87,12 @@ def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 100):
 
     
 def crop_face_loosely(shape, img, input_size):
-    bbox, scale_x, scale_y = get_loose_bbox(shape, img, input_size)
+    bbox, scale_x, scale_y = get_loosen_bbox(shape, img, input_size)
     crop_face = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
     crop_face = cv2.resize(crop_face, (input_size, input_size))
     return crop_face
 
-def get_loose_bbox(shape, img, input_size):
+def get_loosen_bbox(shape, img, input_size):
     max_x = min(shape[2], img.shape[1])
     min_x = max(shape[0], 0)
     max_y = min(shape[3], img.shape[0])

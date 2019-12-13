@@ -49,7 +49,7 @@ while cap.isOpened():
                 bbox = faces[i]
                 bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
                 face_crop = utils.crop_face_loosely(bbox, frame, INPUT_SIZE)
-                face_box, _, _ = utils.get_loose_bbox(bbox, frame, INPUT_SIZE)
+                face_box, _, _ = utils.get_loosen_bbox(bbox, frame, INPUT_SIZE)
                 face_boxes.append(face_box)
                 face_crops.append(face_crop)
 
