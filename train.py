@@ -35,7 +35,7 @@ args = parser.parse_args()
 
 BIN_NUM = 66
 INPUT_SIZE = 128
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 EPOCHS = 140
 
 # Prepare dataset
