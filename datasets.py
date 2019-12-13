@@ -11,6 +11,7 @@ from augmentation import augment_img
 import random
 import glob
 import json
+from augmentation import augment_img
 
 class DataSequence(Sequence):
 
@@ -45,56 +46,51 @@ class DataSequence(Sequence):
 
         batch_image_files = self.image_files[idx * self.batch_size: (1 + idx) * self.batch_size]
 
-        batch_x = []
+        batch_image = []
         batch_yaw = []
         batch_pitch = []
         batch_roll = []
         batch_landmark = []
 
         for image_file in batch_image_files:
-            img = self.__get_input_img(image_file, augment=self.augment)
-
+            
+            # Read images and labels
             label = self.__get_input_label(image_file.replace(".png", ".json"))
+            landmark = label['landmark']
+            unnomarlized_landmark = utils.unnormalize_landmark(landmark, (self.input_size,self.input_size))
+            image, unnomarlized_landmark = self.__get_input_img(image_file, augment=self.augment, landmark=unnomarlized_landmark)
+            landmark = utils.normalize_landmark(landmark, (self.input_size,self.input_size))
 
             # Landmark
-            landmark = []
-            for i in range(5): # 5 Points
-                point = label['landmark'][i]
-                landmark.append(point[0])
-                landmark.append(point[1])
-            landmark = np.array(landmark)
-
-            batch_x.append(img)
+            batch_image.append(image)
             batch_yaw.append([label['yaw'][1], label['yaw'][0]])
             batch_pitch.append([label['pitch'][1], label['pitch'][0]])
             batch_roll.append([label['roll'][1], label['roll'][0]])
             batch_landmark.append(landmark)
 
-        batch_x = np.array(batch_x, dtype=np.float32)
+        batch_image = np.array(batch_image, dtype=np.float32)
+        batch_landmark = np.array(batch_landmark)
+        batch_landmark = batch_landmark.reshape(batch_landmark.shape[0], -1)
         batch_yaw = np.array(batch_yaw)
         batch_pitch = np.array(batch_pitch)
         batch_roll = np.array(batch_roll)
-        batch_landmark = np.array(batch_landmark)
 
-        return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
+        return batch_image, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
 
     def __get_image_files(self, data_folder):
         image_files = os.listdir(data_folder)
         image_files = [os.path.join(data_folder, f) for f in image_files if f.lower().endswith(".jpg") or f.lower().endswith(".png")]
         return image_files
 
-    def __get_input_img(self, file_name, augment=False):
+    def __get_input_img(self, file_name, augment=False, landmark=[]):
         img = cv2.imread(file_name)
-
         if augment:
-            img = augment_img(img)
-
+            img, landmark = augment_img(img, landmark)
             # Uncomment following lines to write out augmented images for debuging
             # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)
             # cv2.waitKey(0)
-
         normed_img = (img - img.mean())/img.std()
-        return normed_img
+        return normed_img, landmark
 
     def __get_input_label(self, file_name):
         with open(file_name) as json_file:

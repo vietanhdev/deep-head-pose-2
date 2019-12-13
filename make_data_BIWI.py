@@ -115,10 +115,7 @@ while True:
                    0.5, (255, 0, 0), 1, cv2.LINE_AA)
         cv2.circle(draw, (int(x), int(y)), 1, (0,255,0))
 
-        x -= args.input_size // 2
-        y -= args.input_size // 2
-        x /= args.input_size
-        y /= args.input_size
+        x, y = utils.normalize_landmark_point((x, y), (args.input_size, args.input_size))
 
         example["landmark"].append([x, y])
 

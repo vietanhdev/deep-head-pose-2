@@ -125,3 +125,39 @@ def get_loosen_bbox(shape, img, input_size):
     scale_y = float(input_size) / (end_y - start_y)
     return (start_x, start_y, end_x, end_y), scale_x, scale_y
 
+
+def normalize_landmark_point(original_point, image_size):
+    '''
+    original_point: (x, y)
+    image_size: (W, H)
+    '''
+    x, y = original_point
+    x -= image_size[0] // 2
+    y -= image_size[1] // 2
+    x /= image_size[0]
+    y /= image_size[1]
+    return [x, y]
+
+def unnormalize_landmark_point(normalized_point, image_size):
+    '''
+    normalized_point: (x, y)
+    image_size: (W, H)
+    '''
+    x, y = normalized_point
+    x *= image_size[0]
+    y *= image_size[1]
+    x += image_size[0] // 2
+    y += image_size[1] // 2
+    return [x, y]
+
+def unnormalize_landmark(landmark, image_size):
+    image_size = np.array(image_size)
+    landmark = np.multiply(np.array(landmark), np.array(image_size)) 
+    landmark = landmark + image_size / 2
+    return landmark
+
+def normalize_landmark(landmark, image_size):
+    image_size = np.array(image_size)
+    landmark = np.array(landmark) - image_size / 2
+    landmark = np.divide(landmark, np.array(image_size))
+    return landmark

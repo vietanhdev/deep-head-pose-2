@@ -48,13 +48,12 @@ def load_aug():
 	)
 
 
-def augment_img(img):
+def augment_img(image, landmark):
 	if seq[0] is None:
 		load_aug()
-	aug_det = seq[0].to_deterministic() 
-	image_aug = aug_det.augment_image( img )
+	image_aug, landmark = seq[0](images=np.array([image]), keypoints=np.array([landmark]))
 	# cv2.imshow("image_aug", image_aug)
 	# cv2.waitKey(0)
-	return image_aug
+	return image_aug[0], landmark[0]
 
 

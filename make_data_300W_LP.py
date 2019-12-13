@@ -139,10 +139,7 @@ while True:
         # Normalize landmark points
         x = float(landmark[l]['x'] - bbox_loosen[0]) * scale_x
         y = float(landmark[l]['y'] - bbox_loosen[1]) * scale_y
-        x -= args.input_size // 2
-        y -= args.input_size // 2
-        x /= args.input_size
-        y /= args.input_size
+        x, y = utils.normalize_landmark_point((x, y), (args.input_size, args.input_size))
 
         example["landmark"].append([x, y])
 
