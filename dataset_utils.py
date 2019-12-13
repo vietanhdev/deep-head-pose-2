@@ -34,22 +34,12 @@ def write_data_folder(examples, output_folder, image_size=(128,128)):
 
             cv2.imwrite(os.path.join(output_folder, str(i) + '.png'), crop)
 
-            # Bin values
-            bins = list(range(-99, 99, 3))
-            binned_labels = np.digitize(
-                [example['yaw'],  example['pitch'],  example['roll']], bins) - 1
-
-            # Pose label
-            yaw = [example['yaw'], binned_labels[0]]
-            pitch = [example['pitch'], binned_labels[1]]
-            roll = [example['roll'], binned_labels[2]]
-
             # Write label
             label = {
                 'image': str(i) + '.png',
-                'roll': roll,
-                'pitch': pitch,
-                'yaw': yaw,
+                'roll': example['roll'],
+                'pitch': example['pitch'],
+                'yaw': example['yaw'],
                 'landmark': example['landmark']
             }
 

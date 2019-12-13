@@ -17,6 +17,11 @@ def load_aug():
 			# don't execute all of them, as that would often be way too strong
 			iaa.SomeOf((0, 5),
 				[
+					iaa.CropAndPad(
+						percent=(-0.2, 0.2),
+						pad_mode=ia.ALL,
+						pad_cval=(0, 255)
+					),
 					iaa.OneOf([
 						iaa.GaussianBlur((0, 0.2)), # blur images with a sigma between 0 and 2.0
 						iaa.AverageBlur(k=(2, 3)), # blur image using local means
@@ -52,8 +57,14 @@ def augment_img(image, landmark):
 	if seq[0] is None:
 		load_aug()
 	image_aug, landmark = seq[0](images=np.array([image]), keypoints=np.array([landmark]))
-	# cv2.imshow("image_aug", image_aug)
+	image_aug = image_aug[0]
+	landmark = landmark[0]
+
+	# draw = image_aug.copy()
+	# for i in range(landmark.shape[0]):
+	# 	draw = cv2.circle(draw, (int(landmark[i][0]), int(landmark[i][1])), 2, (0,255,0), 2)
+	# cv2.imshow("draw", draw)
 	# cv2.waitKey(0)
-	return image_aug[0], landmark[0]
+	return image_aug, landmark
 
 

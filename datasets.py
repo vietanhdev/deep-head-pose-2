@@ -15,7 +15,7 @@ from augmentation import augment_img
 
 class DataSequence(Sequence):
 
-    def __init__(self, data_folder, batch_size=8, input_size=128, shuffle=True, augment=False):
+    def __init__(self, data_folder, batch_size=8, input_size=128, shuffle=True, augment=False, random_flip=True):
         """
         Keras Sequence object to train a model on larger-than-memory data.
         """
@@ -25,6 +25,7 @@ class DataSequence(Sequence):
         self.image_files = self.__get_image_files(data_folder)
         self.file_num = len(self.image_files)
         self.data_folder = data_folder
+        self.random_flip = random_flip
         self.augment = augment
 
         if shuffle:
@@ -56,17 +57,27 @@ class DataSequence(Sequence):
             
             # Read images and labels
             label = self.__get_input_label(image_file.replace(".png", ".json"))
-            landmark = label['landmark']
-            unnomarlized_landmark = utils.unnormalize_landmark(landmark, (self.input_size,self.input_size))
-            image, unnomarlized_landmark = self.__get_input_img(image_file, augment=self.augment, landmark=unnomarlized_landmark)
-            landmark = utils.normalize_landmark(landmark, (self.input_size,self.input_size))
+            
+            # Load image
+            # Flip 50% of images
+            flip = False
+            if self.random_flip and random.random() < 0.5:
+                flip = True
+            image, label = self.__get_input_img(image_file, label=label,  augment=self.augment, flip=flip)
 
-            # Landmark
+            # Add binned value for head pose
+            bins = list(range(-99, 99, 3))
+            binned_labels = np.digitize(
+                [label['yaw'],  label['pitch'],  label['roll']], bins) - 1
+            yaw = [label['yaw'], binned_labels[0]]
+            pitch = [label['pitch'], binned_labels[1]]
+            roll = [label['roll'], binned_labels[2]]
+
             batch_image.append(image)
-            batch_yaw.append([label['yaw'][1], label['yaw'][0]])
-            batch_pitch.append([label['pitch'][1], label['pitch'][0]])
-            batch_roll.append([label['roll'][1], label['roll'][0]])
-            batch_landmark.append(landmark)
+            batch_yaw.append(yaw)
+            batch_pitch.append(pitch)
+            batch_roll.append(roll)
+            batch_landmark.append(label['landmark'])
 
         batch_image = np.array(batch_image, dtype=np.float32)
         batch_landmark = np.array(batch_landmark)
@@ -82,15 +93,29 @@ class DataSequence(Sequence):
         image_files = [os.path.join(data_folder, f) for f in image_files if f.lower().endswith(".jpg") or f.lower().endswith(".png")]
         return image_files
 
-    def __get_input_img(self, file_name, augment=False, landmark=[]):
+    def __get_input_img(self, file_name, label, augment=False, flip=False):
+
+        if flip:
+            label['yaw'] = -label['yaw']
+            label['roll'] = -label['roll']
+            label["landmark"] = np.multiply(label["landmark"], np.array([-1, 1]))
+
+        unnomarlized_landmark = utils.unnormalize_landmark(label["landmark"], (self.input_size,self.input_size))
         img = cv2.imread(file_name)
+
+        if flip:
+            img = cv2.flip(img, 1)
+        
         if augment:
-            img, landmark = augment_img(img, landmark)
-            # Uncomment following lines to write out augmented images for debuging
-            # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)
-            # cv2.waitKey(0)
+            img, unnomarlized_landmark = augment_img(img, unnomarlized_landmark)
+
+        label["landmark"] = utils.normalize_landmark(unnomarlized_landmark, (self.input_size,self.input_size))
+
+        # Uncomment following lines to write out augmented images for debuging
+        # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)
+        # cv2.waitKey(0)
         normed_img = (img - img.mean())/img.std()
-        return normed_img, landmark
+        return normed_img, label
 
     def __get_input_label(self, file_name):
         with open(file_name) as json_file:
