@@ -19,7 +19,6 @@ class DataSequence(Sequence):
         Keras Sequence object to train a model on larger-than-memory data.
         """
 
-        self.sample_file = sample_file
         self.batch_size = batch_size
         self.input_size = input_size
         self.image_files = self.__get_image_files(data_folder)
@@ -28,8 +27,7 @@ class DataSequence(Sequence):
         self.augment = augment
 
         if shuffle:
-            idx = np.random.permutation(range(self.file_num))
-            self.image_files = np.array(self.image_files)[idx]
+            random.shuffle(self.image_files)
        
     def __len__(self):
         """
@@ -56,7 +54,7 @@ class DataSequence(Sequence):
         for image_file in batch_image_files:
             img = self.__get_input_img(image_file, augment=self.augment)
 
-            label = self.__get_input_label(self.data_folder, image_file.replace(".png", ".json"))
+            label = self.__get_input_label(image_file.replace(".png", ".json"))
 
             # Landmark
             landmark = []
@@ -81,7 +79,7 @@ class DataSequence(Sequence):
         return batch_x, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
 
     def __get_image_files(self, data_folder):
-        image_files = os.listdir('images')
+        image_files = os.listdir(data_folder)
         image_files = [os.path.join(data_folder, f) for f in image_files if f.lower().endswith(".jpg") or f.lower().endswith(".png")]
         return image_files
 
@@ -98,7 +96,7 @@ class DataSequence(Sequence):
         normed_img = (img - img.mean())/img.std()
         return normed_img
 
-    def __get_label_from_file(self, file_name):
+    def __get_input_label(self, file_name):
         with open(file_name) as json_file:
             data = json.load(json_file)
-        return json.loads(data)
+        return data

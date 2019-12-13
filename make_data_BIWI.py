@@ -12,6 +12,8 @@ import datetime
 import glob
 from RetinaFace.retinaface import RetinaFace
 
+import random
+
 from dataset_utils import *
 
 import pathlib
@@ -41,6 +43,7 @@ args = parser.parse_args()
 filenames = utils.get_list_from_filenames(
     os.path.join(args.data_dir, "filename_list.txt"))
 filenames = sorted(filenames)
+random.shuffle(filenames)
 
 # Init face detector
 gpuid = 0
@@ -53,7 +56,7 @@ while True:
 
     idx += 1
     print("Processed: {}/{}".format(n_prrocessed, idx))
-    
+
     if idx < 0:
         idx = 0
     if idx >= len(filenames):
@@ -92,7 +95,9 @@ while True:
     bbox = faces[0]
     bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
     bbox_loosen, scale_x, scale_y = utils.get_loose_bbox(bbox, img, args.input_size)
-    crop = utils.crop_face_loosely(bbox, img, args.input_size)
+    crop = img[bbox_loosen[1]:bbox_loosen[3], bbox_loosen[0]:bbox_loosen[2]]
+    crop = cv2.resize(crop, (args.input_size, args.input_size))
+
     draw = crop.copy()
     example["face_bbox"] = bbox_loosen
 
@@ -156,4 +161,4 @@ while True:
 random.seed(42)
 random.shuffle(examples)
 
-write_data_folder(examples, args.output_folder)
+write_data_folder(examples, args.output_folder, image_size=(args.input_size, args.input_size))

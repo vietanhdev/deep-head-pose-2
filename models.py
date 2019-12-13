@@ -171,7 +171,7 @@ class ShuffleNetv2(tf.keras.Model):
 
 class HeadPoseNet:
     def __init__(self, train_dataset=None, val_dataset=None, test_dataset=None, bin_num=66, batch_size=8, input_size=128, learning_rate=0.001):
-        self.class_num = class_num
+        self.class_num = bin_num
         self.batch_size = batch_size
         self.input_size = input_size
         self.learning_rate = learning_rate
