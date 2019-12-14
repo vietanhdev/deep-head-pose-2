@@ -19,6 +19,10 @@ parser.add_argument(
     '-c',
     '--conf_file', default="config.json",
     help='Configuration file')
+parser.add_argument(
+    '-s',
+    '--show_result', default=False,
+    help='Show test resut')
 args = parser.parse_args()
 
 # Open and load the config json
@@ -37,4 +41,4 @@ net = models.HeadPoseNet(config["model"]["im_width"], config["model"]
 net.load_weights(config["test"]["model_file"])
 
 # Test model
-net.test(test_dataset)
+net.test(test_dataset, show_result=args.show_result)

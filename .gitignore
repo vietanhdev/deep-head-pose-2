@@ -114,10 +114,10 @@ dmypy.json
 /data
 
 # Log folder
-/logs
+/logs*
 
 # Model folder
-/models/*
+/models*
 !/models/.gitkeep
 
 # Test results

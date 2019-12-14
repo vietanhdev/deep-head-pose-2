@@ -161,3 +161,13 @@ def normalize_landmark(landmark, image_size):
     landmark = np.array(landmark) - image_size / 2
     landmark = np.divide(landmark, np.array(image_size))
     return landmark
+
+def draw_landmark(img, landmark):
+    im_width = img.shape[1]
+    im_height = img.shape[0]
+    img_size = (im_width, im_height)
+    landmark = landmark.reshape((-1, 2))
+    unnormalized_landmark = unnormalize_landmark(landmark, img_size)
+    for i in range(unnormalized_landmark.shape[0]):
+        img = cv2.circle(img, (int(unnormalized_landmark[i][0]), int(unnormalized_landmark[i][1])), 2, (0,255,0), 2)
+    return img

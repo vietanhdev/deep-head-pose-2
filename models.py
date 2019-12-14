@@ -24,9 +24,9 @@ class HeadPoseNet:
         self.model = self.__create_model()
         
     def __loss_angle(self, y_true, y_pred, alpha=0.5):
-        # cross entropy loss
-        bin_true = y_true[:,0]
-        cont_true = y_true[:,1]
+        # Cross entropy loss
+        cont_true = y_true[:,0]
+        bin_true = y_true[:,1]
 
         # CLS loss
         onehot_labels = tf.one_hot(tf.cast(bin_true, tf.int32), 66)
@@ -96,12 +96,12 @@ class HeadPoseNet:
                                 steps_per_epoch=len(train_dataset),
                                 validation_data=val_dataset,
                                 validation_steps=len(val_dataset),
-                                max_queue_size=128,
+                                max_queue_size=64,
                                 workers=8,
                                 callbacks=[tb, mc, lr],
                                 verbose=1)
             
-    def test(self, test_dataset):
+    def test(self, test_dataset, show_result=False):
         yaw_error = .0
         pitch_error = .0
         roll_error = .0
@@ -127,6 +127,19 @@ class HeadPoseNet:
             pitch_error += np.sum(np.abs(batch_pitch - batch_pitch_pred))
             roll_error += np.sum(np.abs(batch_roll - batch_roll_pred))
             landmark_error += np.sum(np.abs(batch_landmark - batch_landmark_pred))
+
+            # Show result
+            if show_result:
+                for i in range(images.shape[0]):
+                    image = images[i]
+                    yaw = batch_yaw_pred[i]
+                    pitch = batch_pitch_pred[i]
+                    roll = batch_roll_pred[i]
+                    landmark = batch_landmark_pred[i]
+
+                    image = utils.draw_landmark(image, landmark)
+                    cv2.imshow("Test result", image)
+                    cv2.waitKey(0)
         
         avg_time = total_time / total_samples
         avg_fps = 1.0 / avg_time
