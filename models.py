@@ -11,6 +11,7 @@ from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxP
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from tensorflow.keras import callbacks
 from shufflenetv2 import *
+import pathlib
 
 class HeadPoseNet:
     def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.0001):
@@ -74,12 +75,15 @@ class HeadPoseNet:
     def train(self, train_dataset, val_dataset, train_conf):
 
         # Load pretrained model
-        if train_conf["load_model"]:
-            self.model = tf.keras.models.load_model(train_conf["pretrained_load_model_path"])
+        if train_conf["load_weights"]:
+            self.model = tf.keras.models.load_weights(train_conf["pretrained_weights_path"])
+
+        # Make model path
+        pathlib.Path(train_conf["model_folder"]).mkdir(parents=True, exist_ok=True)
 
         # Define the callbacks for training
         tb = TensorBoard(log_dir=train_conf["logs_dir"], write_graph=True)
-        mc = ModelCheckpoint(filepath=os.path.join(train_conf["model_folder"], train_conf["model_base_name"] + "_ep{epoch:03d}.h5"), save_weights_only=False, save_format="h5", verbose=2)
+        mc = ModelCheckpoint(filepath=os.path.join(train_conf["model_folder"], train_conf["model_base_name"] + "_ep{epoch:03d}.h5"), save_weights_only=True, save_format="h5", verbose=2)
         def step_decay(epoch, lr):
             drop = train_conf["learning_rate_drop"]
             epochs_drop = train_conf["learning_rate_epochs_drop"]
