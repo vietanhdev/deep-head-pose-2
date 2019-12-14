@@ -15,7 +15,7 @@ from augmentation import augment_img
 
 class DataSequence(Sequence):
 
-    def __init__(self, data_folder, batch_size=8, input_size=128, shuffle=True, augment=False, random_flip=True):
+    def __init__(self, data_folder, batch_size=8, input_size=(128, 128), shuffle=True, augment=False, random_flip=True):
         """
         Keras Sequence object to train a model on larger-than-memory data.
         """
@@ -100,7 +100,7 @@ class DataSequence(Sequence):
             label['roll'] = -label['roll']
             label["landmark"] = np.multiply(label["landmark"], np.array([-1, 1]))
 
-        unnomarlized_landmark = utils.unnormalize_landmark(label["landmark"], (self.input_size,self.input_size))
+        unnomarlized_landmark = utils.unnormalize_landmark(label["landmark"], self.input_size)
         img = cv2.imread(file_name)
 
         if flip:
@@ -109,7 +109,7 @@ class DataSequence(Sequence):
         if augment:
             img, unnomarlized_landmark = augment_img(img, unnomarlized_landmark)
 
-        label["landmark"] = utils.normalize_landmark(unnomarlized_landmark, (self.input_size,self.input_size))
+        label["landmark"] = utils.normalize_landmark(unnomarlized_landmark, self.input_size)
 
         # Uncomment following lines to write out augmented images for debuging
         # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)

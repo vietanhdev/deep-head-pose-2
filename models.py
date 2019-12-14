@@ -13,16 +13,13 @@ from tensorflow.keras import callbacks
 from shufflenetv2 import *
 
 class HeadPoseNet:
-    def __init__(self, train_dataset=None, val_dataset=None, test_dataset=None, bin_num=66, batch_size=8, input_size=128, learning_rate=0.001):
-        self.class_num = bin_num
-        self.batch_size = batch_size
-        self.input_size = input_size
+    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.0001):
+        self.im_width = im_width
+        self.im_height = im_height
+        self.class_num = nb_bins
         self.learning_rate = learning_rate
         self.idx_tensor = [idx for idx in range(self.class_num)]
         self.idx_tensor = tf.Variable(np.array(self.idx_tensor, dtype=np.float32))
-        self.train_dataset = train_dataset
-        self.val_dataset = val_dataset
-        self.test_dataset = test_dataset
         self.model = self.__create_model()
         
     def __loss_angle(self, y_true, y_pred, alpha=0.5):
@@ -44,7 +41,7 @@ class HeadPoseNet:
         return total_loss
 
     def __create_model(self):
-        inputs = tf.keras.layers.Input(shape=(self.input_size, self.input_size, 3))
+        inputs = tf.keras.layers.Input(shape=(self.im_height, self.im_width, 3))
         feature = ShuffleNetv2(self.class_num)(inputs)
         feature = tf.keras.layers.Flatten()(feature)
         feature = tf.keras.layers.Dropout(0.5)(feature)
@@ -65,40 +62,42 @@ class HeadPoseNet:
             'roll':self.__loss_angle,
             'landmarks':'mean_squared_error'
         }
-        
+
         model.compile(optimizer=tf.optimizers.Adam(self.learning_rate),
                         loss=losses, loss_weights=[1, 1, 1, 20000])
        
         return model
 
-    def train(self, model_path, max_epoches=100, tf_board_log_dir="./logs", load_weight=True):
+    def load_weights(self, weights_path):
+        self.model.load_weights(weights_path)
+
+    def train(self, train_dataset, val_dataset, train_conf):
+
+        # Load pretrained model
+        if train_conf["load_model"]:
+            self.model = tf.keras.models.load_model(train_conf["pretrained_load_model_path"])
+
+        # Define the callbacks for training
+        tb = TensorBoard(log_dir=train_conf["logs_dir"], write_graph=True)
+        mc = ModelCheckpoint(filepath=os.path.join(train_conf["model_folder"], train_conf["model_base_name"] + "_ep{epoch:03d}.h5"), save_weights_only=False, save_format="h5", verbose=2)
+        def step_decay(epoch, lr):
+            drop = train_conf["learning_rate_drop"]
+            epochs_drop = train_conf["learning_rate_epochs_drop"]
+            lrate = lr * math.pow(drop,math.floor((1+epoch)/epochs_drop))
+            return lrate
+        lr = LearningRateScheduler(step_decay)
         
-        if load_weight:
-            self.model.load_weights(model_path)
-        else:
-            # Define the callbacks for training
-            tb = TensorBoard(log_dir=tf_board_log_dir, write_graph=True)
-            mc = ModelCheckpoint(filepath=model_path.replace(".h5", "") + "_ep{epoch:03d}.h5", save_weights_only=True, save_format="h5", verbose=2)
-            def step_decay(epoch):
-                initial_lrate = 0.001
-                drop = 0.5
-                epochs_drop = 15.0
-                lrate = initial_lrate * math.pow(drop,  
-                        math.floor((1+epoch)/epochs_drop))
-                return lrate
-            lr = LearningRateScheduler(step_decay)
+        self.model.fit_generator(generator=train_dataset,
+                                epochs=train_conf["nb_epochs"],
+                                steps_per_epoch=len(train_dataset),
+                                validation_data=val_dataset,
+                                validation_steps=len(val_dataset),
+                                max_queue_size=128,
+                                workers=8,
+                                callbacks=[tb, mc, lr],
+                                verbose=1)
             
-            self.model.fit_generator(generator=self.train_dataset,
-                                    epochs=max_epoches,
-                                    steps_per_epoch=len(self.train_dataset),
-                                    validation_data=self.val_dataset,
-                                    validation_steps=len(self.val_dataset),
-                                    max_queue_size=128,
-                                    workers=8,
-                                    callbacks=[tb, mc, lr],
-                                    verbose=1)
-            
-    def test(self):
+    def test(self, test_dataset):
         yaw_error = .0
         pitch_error = .0
         roll_error = .0
@@ -106,7 +105,7 @@ class HeadPoseNet:
         total_time = .0
         total_samples = 0
 
-        test_gen = self.test_dataset
+        test_gen = test_dataset
         for images, [batch_yaw, batch_pitch, batch_roll, batch_landmark] in test_gen:
 
             start_time = time.time()

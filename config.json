@@ -1,0 +1,30 @@
+{
+    "model" : {
+        "im_width":                   128,
+        "im_height":                  128,
+        "nb_bins":                     66
+    },
+
+    "train": {
+        "train_data_folder":            "./data/300W_LP_prepared/",
+        "val_data_folder":              "./data/BIWI_prepared/",
+        "train_batch_size":             16,
+        "val_batch_size":               8,
+        "nb_epochs":                    200,
+        "debug":                        true,
+        "model_folder" :                "./models/",
+        "model_base_name":              "model",
+        "load_model":                   false,
+        "pretrained_load_model_path":   "model.h5",
+        "logs_dir" :                    "logs",
+        "learning_rate":                1e-4,
+        "learning_rate_drop":           0.5,
+        "learning_rate_epochs_drop":    10
+    },
+
+    "test": {
+        "model_file" :                 "model.h5",
+        "test_data_folder":            "./data/BIWI_prepared/",
+        "test_batch_size":             8
+    }
+}

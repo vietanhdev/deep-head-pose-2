@@ -26,10 +26,6 @@ with open(args.conf_file) as config_buffer:
     config = json.loads(config_buffer.read())
 
 # Prepare dataset
-train_dataset = datasets.DataSequence(config["train"]["train_data_folder"], batch_size=config["train"]["train_batch_size"], input_size=(
-    config["model"]["im_width"], config["model"]["im_height"]), shuffle=True, augment=True)
-val_dataset = datasets.DataSequence(config["train"]["val_data_folder"], batch_size=config["train"]["val_batch_size"], input_size=(
-    config["model"]["im_width"], config["model"]["im_height"]), shuffle=True, augment=True)
 test_dataset = datasets.DataSequence(config["test"]["test_data_folder"], batch_size=config["test"]["test_batch_size"], input_size=(
     config["model"]["im_width"], config["model"]["im_height"]), shuffle=False, augment=False)
 
@@ -37,8 +33,8 @@ test_dataset = datasets.DataSequence(config["test"]["test_data_folder"], batch_s
 net = models.HeadPoseNet(config["model"]["im_width"], config["model"]
                          ["im_height"], nb_bins=config["model"]["nb_bins"], learning_rate=config["train"]["learning_rate"])
 
-# Train model
-net.train(train_dataset, val_dataset, config["train"])
+# Load model
+net.load_weights(config["test"]["model_file"])
 
 # Test model
 net.test(test_dataset)
