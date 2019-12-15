@@ -31,7 +31,7 @@ with open(args.conf_file) as config_buffer:
 
 # Prepare dataset
 test_dataset = datasets.DataSequence(config["test"]["test_data_folder"], batch_size=config["test"]["test_batch_size"], input_size=(
-    config["model"]["im_width"], config["model"]["im_height"]), shuffle=False, augment=False)
+    config["model"]["im_width"], config["model"]["im_height"]), shuffle=False, augment=False, random_flip=False)
 
 # Build model
 net = models.HeadPoseNet(config["model"]["im_width"], config["model"]

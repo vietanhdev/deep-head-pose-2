@@ -14,11 +14,12 @@ from shufflenetv2 import *
 import pathlib
 
 class HeadPoseNet:
-    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.0001):
+    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.001, loss_weights=[1,1,1,20000]):
         self.im_width = im_width
         self.im_height = im_height
         self.class_num = nb_bins
         self.learning_rate = learning_rate
+        self.loss_weights = loss_weights
         self.idx_tensor = [idx for idx in range(self.class_num)]
         self.idx_tensor = tf.Variable(np.array(self.idx_tensor, dtype=np.float32))
         self.model = self.__create_model()
@@ -65,7 +66,7 @@ class HeadPoseNet:
         }
 
         model.compile(optimizer=tf.optimizers.Adam(self.learning_rate),
-                        loss=losses, loss_weights=[1, 1, 1, 20000])
+                        loss=losses, loss_weights=self.loss_weights)
        
         return model
 
@@ -76,7 +77,8 @@ class HeadPoseNet:
 
         # Load pretrained model
         if train_conf["load_weights"]:
-            self.model = tf.keras.models.load_weights(train_conf["pretrained_weights_path"])
+            print("Loading model weights: " + train_conf["pretrained_weights_path"])
+            self.model.load_weights(train_conf["pretrained_weights_path"])
 
         # Make model path
         pathlib.Path(train_conf["model_folder"]).mkdir(parents=True, exist_ok=True)
@@ -109,11 +111,11 @@ class HeadPoseNet:
         total_time = .0
         total_samples = 0
 
-        test_gen = test_dataset
-        for images, [batch_yaw, batch_pitch, batch_roll, batch_landmark] in test_gen:
+        test_dataset.set_normalization(False)
+        for images, [batch_yaw, batch_pitch, batch_roll, batch_landmark] in test_dataset:
 
             start_time = time.time()
-            batch_yaw_pred, batch_pitch_pred, batch_roll_pred, batch_landmark_pred = self.predict_batch(images, normalize=False)
+            batch_yaw_pred, batch_pitch_pred, batch_roll_pred, batch_landmark_pred = self.predict_batch(images, normalize=True)
             total_time += time.time() - start_time
             
             total_samples += np.array(images).shape[0]

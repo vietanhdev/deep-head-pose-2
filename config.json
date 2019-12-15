@@ -19,7 +19,8 @@
         "logs_dir" :                    "logs",
         "learning_rate":                1e-4,
         "learning_rate_drop":           0.5,
-        "learning_rate_epochs_drop":    10
+        "learning_rate_epochs_drop":    10,
+        "loss_weights_yaw_pitch_roll_landmark": [1,1,1,20000]
     },
 
     "test": {

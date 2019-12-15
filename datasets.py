@@ -15,7 +15,7 @@ from augmentation import augment_img
 
 class DataSequence(Sequence):
 
-    def __init__(self, data_folder, batch_size=8, input_size=(128, 128), shuffle=True, augment=False, random_flip=True):
+    def __init__(self, data_folder, batch_size=8, input_size=(128, 128), shuffle=True, augment=False, random_flip=True, normalize=True):
         """
         Keras Sequence object to train a model on larger-than-memory data.
         """
@@ -27,6 +27,7 @@ class DataSequence(Sequence):
         self.data_folder = data_folder
         self.random_flip = random_flip
         self.augment = augment
+        self.normalize = normalize
 
         if shuffle:
             random.shuffle(self.image_files)
@@ -79,7 +80,7 @@ class DataSequence(Sequence):
             batch_roll.append(roll)
             batch_landmark.append(label['landmark'])
 
-        batch_image = np.array(batch_image, dtype=np.float32)
+        batch_image = np.array(batch_image)
         batch_landmark = np.array(batch_landmark)
         batch_landmark = batch_landmark.reshape(batch_landmark.shape[0], -1)
         batch_yaw = np.array(batch_yaw)
@@ -87,6 +88,9 @@ class DataSequence(Sequence):
         batch_roll = np.array(batch_roll)
 
         return batch_image, [batch_yaw, batch_pitch, batch_roll, batch_landmark]
+
+    def set_normalization(self, normalize):
+        self.normalize = normalize
 
     def __get_image_files(self, data_folder):
         image_files = os.listdir(data_folder)
@@ -114,8 +118,11 @@ class DataSequence(Sequence):
         # Uncomment following lines to write out augmented images for debuging
         # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)
         # cv2.waitKey(0)
-        normed_img = (img - img.mean())/img.std()
-        return normed_img, label
+
+        if self.normalize:
+            img = (img - img.mean())/img.std()
+
+        return img, label
 
     def __get_input_label(self, file_name):
         with open(file_name) as json_file:
