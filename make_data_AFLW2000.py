@@ -20,7 +20,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument(
     '-d',
-    '--data_dir', default="./data/300W_LP",
+    '--data_dir', default="./data/AFLW2000",
     help='Data directory')
 
 parser.add_argument(
@@ -31,7 +31,7 @@ parser.add_argument(
     
 parser.add_argument(
     '-o',
-    '--output_folder', default="./data/300W_LP_prepared/",
+    '--output_folder', default="./data/AFLW2000_prepared/",
     help='Output folder')
 
 args = parser.parse_args()
@@ -93,34 +93,65 @@ while True:
     label = {}
 
     # Crop the face loosely
-    mat_path = os.path.join(args.data_dir, "landmarks", filenames[idx] + "_pts.mat")
-    ldm_mat = sio.loadmat(mat_path)
-    landmark_64p = ldm_mat["pts_2d"]
+    # ldm_mat = sio.loadmat(os.path.join(args.data_dir, filenames[idx] + ".mat"))
+    # print(ldm_mat)
+    pt2d = get_pt2d_from_mat(os.path.join(args.data_dir, filenames[idx] + ".mat"))
+    print(pt2d.shape)
 
     landmark = []
-    point0_x = int((landmark_64p[37, 0] + landmark_64p[40, 0]) / 2)
-    point0_y = int((landmark_64p[37, 1] + landmark_64p[40, 1]) / 2)
-    landmark.append({'x': point0_x, 'y': point0_y})
-    point1_x = int((landmark_64p[43, 0] + landmark_64p[46, 0]) / 2)
-    point1_y = int((landmark_64p[43, 1] + landmark_64p[46, 1]) / 2)
-    landmark.append({'x': point1_x, 'y': point1_y})
-    landmark.append({'x': landmark_64p[30, 0], 'y': landmark_64p[30, 1]})
-    landmark.append({'x': landmark_64p[48, 0], 'y': landmark_64p[48, 1]})
-    landmark.append({'x': landmark_64p[64, 0], 'y': landmark_64p[64, 1]})
+    landmark.append({'x': pt2d[:, 7][0], 'y': pt2d[:, 7][1]})
+    landmark.append({'x': pt2d[:, 10][0], 'y': pt2d[:, 10][1]})
+    landmark.append({'x': pt2d[:, 14][0], 'y': pt2d[:, 14][1]})
+    landmark.append({'x': pt2d[:, 17][0], 'y': pt2d[:, 17][1]})
+    landmark.append({'x': pt2d[:, 19][0], 'y': pt2d[:, 19][1]})
+
+
+    def show_image_with_landmark(window_name, image, landmark, confirm=False):
+        for i in range(len(landmark)):
+            x = int(landmark[i]['x'])
+            y = int(landmark[i]['y'])
+            image = cv2.putText(image, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,  
+                    1, (255, 0, 0), 1, cv2.LINE_AA)
+            image = cv2.circle(image, (int(x), int(y)), 2, (0,255,0))
+
+        if confirm:
+            # Using cv2.putText() method 
+            image = cv2.putText(image, 'Confirm?', (100, 100) , cv2.FONT_HERSHEY_SIMPLEX ,  
+                   1, (0, 0, 255), 2, cv2.LINE_AA)
+
+        cv2.imshow(window_name, image)
+
+        return image
+
+    def re_label(img):
+        print("Re-labeling image")
+        while True:
+            draw = img.copy()
+            landmark = []
+            for i in range(5): 
+                r = cv2.selectROI("Label", draw)
+                landmark.append({'x': r[0], 'y': r[1]})
+                draw = show_image_with_landmark("Label", draw, landmark)
+            draw = show_image_with_landmark("Label", draw, landmark, confirm=True)
+            r = cv2.selectROI("Label", draw)
+            if r == (0,0,0,0):
+                return landmark
     
     for i in range(len(landmark)):
         x = int(landmark[i]['x'])
         y = int(landmark[i]['y'])
 
         draw = cv2.putText(draw, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,  
-                   0.5, (255, 0, 0), 1, cv2.LINE_AA)
-        cv2.circle(draw, (int(x), int(y)), 1, (0,255,0))
+                   0.5, (255, 255, 255), 1, cv2.LINE_AA)
+        cv2.circle(draw, (int(x), int(y)), 1, (0,0,255))
 
-    # cv2.imshow("draw", draw)
+    # Fill missing points
+    if landmark[0]['x'] == -1 or landmark[1]['x'] == -1 or landmark[3]['x'] == -1 or landmark[4]['x'] == -1:
+        landmark = re_label(draw.copy())
+
+    # cv2.imshow("Label", draw)
     # cv2.waitKey(0)
-    
 
-    pt2d = get_pt2d_from_mat(os.path.join(args.data_dir, filenames[idx] + ".mat"))
     x_min = int(min(pt2d[0, :]))
     y_min = int(min(pt2d[1, :]))
     x_max = int(max(pt2d[0, :]))

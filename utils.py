@@ -89,7 +89,7 @@ def draw_axis(img, yaw, pitch, roll, tdx=None, tdy=None, size = 100):
 def crop_face_loosely(shape, img, input_size):
     bbox, scale_x, scale_y = get_loosen_bbox(shape, img, input_size)
     crop_face = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-    crop_face = cv2.resize(crop_face, (input_size, input_size))
+    crop_face = cv2.resize(crop_face, input_size)
     return crop_face
 
 def get_loosen_bbox(shape, img, input_size):
@@ -121,8 +121,8 @@ def get_loosen_bbox(shape, img, input_size):
     if end_y > img.shape[0]:
         end_y = img.shape[0]
 
-    scale_x = float(input_size) / (end_x - start_x)
-    scale_y = float(input_size) / (end_y - start_y)
+    scale_x = float(input_size[0]) / (end_x - start_x)
+    scale_y = float(input_size[1]) / (end_y - start_y)
     return (start_x, start_y, end_x, end_y), scale_x, scale_y
 
 
@@ -138,7 +138,7 @@ def normalize_landmark_point(original_point, image_size):
     y /= image_size[1]
     return [x, y]
 
-def unnormalize_landmark_point(normalized_point, image_size):
+def unnormalize_landmark_point(normalized_point, image_size, scale=[1,1]):
     '''
     normalized_point: (x, y)
     image_size: (W, H)
@@ -148,6 +148,8 @@ def unnormalize_landmark_point(normalized_point, image_size):
     y *= image_size[1]
     x += image_size[0] // 2
     y += image_size[1] // 2
+    x *= scale[0]
+    y *= scale[1]
     return [x, y]
 
 def unnormalize_landmark(landmark, image_size):

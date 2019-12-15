@@ -148,10 +148,10 @@ class HeadPoseNet:
         avg_fps = 1.0 / avg_time
 
         print("### MAE: ")
-        print("- Yaw MAE: {}".format(yaw_error / len(test_gen)))
-        print("- Pitch MAE: {}".format(pitch_error / len(test_gen)))
-        print("- Roll MAE: {}".format(roll_error / len(test_gen)))
-        print("- Landmark MAE: {}".format(landmark_error / len(test_gen)))
+        print("- Yaw MAE: {}".format(yaw_error / len(test_dataset)))
+        print("- Pitch MAE: {}".format(pitch_error / len(test_dataset)))
+        print("- Roll MAE: {}".format(roll_error / len(test_dataset)))
+        print("- Landmark MAE: {}".format(landmark_error / len(test_dataset)))
         print("- Avg. FPS: {}".format(avg_fps))
         
 
