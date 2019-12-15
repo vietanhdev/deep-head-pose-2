@@ -140,6 +140,7 @@ class HeadPoseNet:
                     landmark = batch_landmark_pred[i]
 
                     image = utils.draw_landmark(image, landmark)
+                    image = utils.plot_pose_cube(image, yaw, pitch, roll, tdx=image.shape[1] // 2, tdy=image.shape[0] // 2, size=80)
                     cv2.imshow("Test result", image)
                     cv2.waitKey(0)
         
