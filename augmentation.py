@@ -22,6 +22,10 @@ def load_aug():
 						pad_mode=ia.ALL,
 						pad_cval=(0, 255)
 					),
+					iaa.Crop(
+						percent=0.25,
+						keep_size=True
+					),
 					iaa.OneOf([
 						iaa.GaussianBlur((0, 0.2)), # blur images with a sigma between 0 and 2.0
 						iaa.AverageBlur(k=(2, 3)), # blur image using local means

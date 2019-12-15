@@ -9,15 +9,15 @@
         "train_data_folder":            "./data/train_set/",
         "val_data_folder":              "./data/val_set/",
         "train_batch_size":             16,
-        "val_batch_size":               8,
+        "val_batch_size":               16,
         "nb_epochs":                    200,
         "debug":                        true,
-        "model_folder" :                "./models/",
+        "model_folder" :                "./models_5/",
         "model_base_name":              "model",
         "load_weights":                   false,
         "pretrained_weights_path":   "model.h5",
-        "logs_dir" :                    "logs",
-        "learning_rate":                1e-4,
+        "logs_dir" :                    "logs_5",
+        "learning_rate":                1e-3,
         "learning_rate_drop":           0.5,
         "learning_rate_epochs_drop":    10,
         "loss_weights_yaw_pitch_roll_landmark": [1,1,1,20000]
@@ -25,7 +25,7 @@
 
     "test": {
         "model_file" :                 "model.h5",
-        "test_data_folder":            "./data/AFLW2000_prepared/",
+        "test_data_folder":            "./data/val_set/",
         "test_batch_size":             8
     }
 }

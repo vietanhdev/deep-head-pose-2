@@ -119,6 +119,19 @@ class DataSequence(Sequence):
         # cv2.imwrite("aug_" + str(random.randint(0, 50)) + ".png", img)
         # cv2.waitKey(0)
 
+        # draw = img.copy()
+        # unnomarlized_landmark = utils.unnormalize_landmark(label["landmark"], self.input_size)
+        # for i in range(len(unnomarlized_landmark)):
+        #     x = int(unnomarlized_landmark[i][0])
+        #     y = int(unnomarlized_landmark[i][1])
+
+        #     draw = cv2.putText(draw, str(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX,  
+        #             0.5, (255, 255, 255), 1, cv2.LINE_AA)
+        #     cv2.circle(draw, (int(x), int(y)), 1, (0,0,255))
+
+        # cv2.imshow("draw", draw)
+        # cv2.waitKey(0)
+
         if self.normalize:
             img = (img - img.mean())/img.std()
 

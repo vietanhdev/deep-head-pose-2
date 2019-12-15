@@ -99,7 +99,7 @@ class HeadPoseNet:
                                 validation_data=val_dataset,
                                 validation_steps=len(val_dataset),
                                 max_queue_size=64,
-                                workers=8,
+                                workers=6,
                                 callbacks=[tb, mc, lr],
                                 verbose=1)
             
