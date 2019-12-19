@@ -35,7 +35,8 @@ test_dataset = datasets.DataSequence(config["test"]["test_data_folder"], batch_s
 
 # Build model
 net = models.HeadPoseNet(config["model"]["im_width"], config["model"]
-                         ["im_height"], nb_bins=config["model"]["nb_bins"], learning_rate=config["train"]["learning_rate"], loss_weights=config["train"]["loss_weights_yaw_pitch_roll_landmark"])
+                         ["im_height"], nb_bins=config["model"]["nb_bins"], learning_rate=config["train"]["learning_rate"], loss_weights=config["train"]["loss_weights_yaw_pitch_roll_landmark"],
+                         loss_angle_alpha=config["train"]["loss_angle_alpha"],)
 
 # Train model
 net.train(train_dataset, val_dataset, config["train"])

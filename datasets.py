@@ -106,6 +106,7 @@ class DataSequence(Sequence):
 
         unnomarlized_landmark = utils.unnormalize_landmark(label["landmark"], self.input_size)
         img = cv2.imread(file_name)
+        img = cv2.resize(img, (self.input_size))
 
         if flip:
             img = cv2.flip(img, 1)
@@ -134,7 +135,6 @@ class DataSequence(Sequence):
 
         if self.normalize:
             img = (img - img.mean())/img.std()
-
         return img, label
 
     def __get_input_label(self, file_name):

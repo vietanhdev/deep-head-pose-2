@@ -27,7 +27,7 @@ parser.add_argument(
 
 parser.add_argument(
     '-s',
-    '--input_size', default=128,
+    '--input_size', default=224,
     type=int,
     help='Input size for deep head pose')
     
@@ -94,7 +94,7 @@ while True:
     # Crop face
     bbox = faces[0]
     bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
-    bbox_loosen, scale_x, scale_y = utils.get_loosen_bbox(bbox, img, args.input_size)
+    bbox_loosen, scale_x, scale_y = utils.get_loosen_bbox(bbox, img, (args.input_size, args.input_size))
     crop = img[bbox_loosen[1]:bbox_loosen[3], bbox_loosen[0]:bbox_loosen[2]]
     crop = cv2.resize(crop, (args.input_size, args.input_size))
 
