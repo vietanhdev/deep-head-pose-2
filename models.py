@@ -14,17 +14,18 @@ from shufflenetv2 import *
 import pathlib
 
 class HeadPoseNet:
-    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.001, loss_weights=[1,1,1,20000]):
+    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.001, loss_weights=[1,1,1,20000], loss_angle_alpha=0.5):
         self.im_width = im_width
         self.im_height = im_height
         self.class_num = nb_bins
         self.learning_rate = learning_rate
         self.loss_weights = loss_weights
+        self.loss_angle_alpha = loss_angle_alpha
         self.idx_tensor = [idx for idx in range(self.class_num)]
         self.idx_tensor = tf.Variable(np.array(self.idx_tensor, dtype=np.float32))
         self.model = self.__create_model()
         
-    def __loss_angle(self, y_true, y_pred, alpha=0.5):
+    def __loss_angle(self, y_true, y_pred):
         # Cross entropy loss
         cont_true = y_true[:,0]
         bin_true = y_true[:,1]
@@ -39,7 +40,7 @@ class HeadPoseNet:
         mse_loss = tf.compat.v1.losses.mean_squared_error(labels=cont_true, predictions=pred_cont)
 
         # Total loss
-        total_loss = cls_loss + alpha * mse_loss
+        total_loss = cls_loss + self.loss_angle_alpha * mse_loss
         return total_loss
 
     def __create_model(self):
@@ -120,9 +121,9 @@ class HeadPoseNet:
             
             total_samples += np.array(images).shape[0]
 
-            batch_yaw = batch_yaw[:, 1]
-            batch_pitch = batch_pitch[:, 1]
-            batch_roll = batch_roll[:, 1]
+            batch_yaw = batch_yaw[:, 0]
+            batch_pitch = batch_pitch[:, 0]
+            batch_roll = batch_roll[:, 0]
     
             # Mean absolute error
             yaw_error += np.sum(np.abs(batch_yaw - batch_yaw_pred))
@@ -148,10 +149,10 @@ class HeadPoseNet:
         avg_fps = 1.0 / avg_time
 
         print("### MAE: ")
-        print("- Yaw MAE: {}".format(yaw_error / len(test_dataset)))
-        print("- Pitch MAE: {}".format(pitch_error / len(test_dataset)))
-        print("- Roll MAE: {}".format(roll_error / len(test_dataset)))
-        print("- Landmark MAE: {}".format(landmark_error / len(test_dataset)))
+        print("- Yaw MAE: {}".format(yaw_error / total_samples))
+        print("- Pitch MAE: {}".format(pitch_error / total_samples))
+        print("- Roll MAE: {}".format(roll_error / total_samples))
+        print("- Landmark MAE: {}".format(landmark_error / total_samples / 10))
         print("- Avg. FPS: {}".format(avg_fps))
         
 
@@ -170,6 +171,5 @@ class HeadPoseNet:
 
     def normalize_img_batch(self, face_imgs):
         image_batch = np.array(face_imgs, dtype=np.float32)
-        image_batch = np.asarray(image_batch)
         normed_image_batch = (image_batch - image_batch.mean())/image_batch.std()
         return normed_image_batch

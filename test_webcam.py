@@ -57,9 +57,11 @@ while cap.isOpened():
                 bbox = faces[i]
                 bbox = (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))
                 face_crop = utils.crop_face_loosely(bbox, frame, (config["model"]["im_width"], config["model"]["im_height"]))
+                face_crop = cv2.resize(face_crop, (config["model"]["im_width"], config["model"]["im_height"]))
                 face_box, _, _ = utils.get_loosen_bbox(bbox, frame, (config["model"]["im_width"], config["model"]["im_height"]))
                 face_boxes.append(face_box)
                 face_crops.append(face_crop)
+                cv2.imshow("crop", face_crop)
 
             if len(face_crops) > 0:
 

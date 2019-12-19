@@ -161,8 +161,8 @@ while True:
 
     # Crop face
     bbox = (x_min, y_min, x_max, y_max)
-    bbox_loosen, scale_x, scale_y = utils.get_loosen_bbox(bbox, img, args.input_size)
-    crop = utils.crop_face_loosely(bbox, img, args.input_size)
+    bbox_loosen, scale_x, scale_y = utils.get_loosen_bbox(bbox, img, (args.input_size, args.input_size))
+    crop = utils.crop_face_loosely(bbox, img, (args.input_size, args.input_size))
     example["face_bbox"] = bbox_loosen
 
     # Adjust landmark points
