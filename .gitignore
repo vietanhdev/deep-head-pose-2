@@ -122,3 +122,6 @@ dmypy.json
 
 # Test results
 /test_result
+
+# Trained models
+/trained
