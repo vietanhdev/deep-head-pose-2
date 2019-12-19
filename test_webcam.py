@@ -60,6 +60,10 @@ while cap.isOpened():
                 face_crop = cv2.resize(face_crop, (config["model"]["im_width"], config["model"]["im_height"]))
                 face_box, _, _ = utils.get_loosen_bbox(bbox, frame, (config["model"]["im_width"], config["model"]["im_height"]))
                 face_boxes.append(face_box)
+
+                # Convert crop image to RGB color space
+                face_crop = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
+            
                 face_crops.append(face_crop)
                 cv2.imshow("crop", face_crop)
 

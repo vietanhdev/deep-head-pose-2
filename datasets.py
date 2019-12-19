@@ -133,6 +133,8 @@ class DataSequence(Sequence):
         # cv2.imshow("draw", draw)
         # cv2.waitKey(0)
 
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
         if self.normalize:
             img = (img - img.mean())/img.std()
         return img, label
