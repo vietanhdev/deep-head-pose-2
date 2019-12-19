@@ -10,17 +10,19 @@ from tensorflow.keras.callbacks import LearningRateScheduler
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, MaxPool2D, DepthwiseConv2D, GlobalAveragePooling2D
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
 from tensorflow.keras import callbacks
-from shufflenetv2 import *
+from backbonds.shufflenetv2_backbond import *
+import efficientnet.tfkeras as efn 
 import pathlib
 
 class HeadPoseNet:
-    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.001, loss_weights=[1,1,1,20000], loss_angle_alpha=0.5):
+    def __init__(self, im_width, im_height, nb_bins=66, learning_rate=0.001, loss_weights=[1,1,1,20000], loss_angle_alpha=0.5, backbond="SHUFFLE_NET_V2"):
         self.im_width = im_width
         self.im_height = im_height
         self.class_num = nb_bins
         self.learning_rate = learning_rate
         self.loss_weights = loss_weights
         self.loss_angle_alpha = loss_angle_alpha
+        self.backbond = backbond
         self.idx_tensor = [idx for idx in range(self.class_num)]
         self.idx_tensor = tf.Variable(np.array(self.idx_tensor, dtype=np.float32))
         self.model = self.__create_model()
@@ -45,7 +47,13 @@ class HeadPoseNet:
 
     def __create_model(self):
         inputs = tf.keras.layers.Input(shape=(self.im_height, self.im_width, 3))
-        feature = ShuffleNetv2(self.class_num)(inputs)
+
+        if self.backbond == "SHUFFLE_NET_V2":
+            feature = ShuffleNetv2(self.class_num)(inputs)
+        elif self.backbond == "EFFICIENT_NET_B0":
+            feature = ShuffleNetv2(self.class_num)(inputs)
+            feature = efn.EfficientNetB0(weights='imagenet', include_top=False, input_shape=(self.im_height, self.im_width, 3))(inputs)
+
         feature = tf.keras.layers.Flatten()(feature)
         feature = tf.keras.layers.Dropout(0.5)(feature)
         feature = tf.keras.layers.Dense(units=4096, activation=tf.nn.relu)(feature)
