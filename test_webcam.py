@@ -31,7 +31,9 @@ with open(args.conf_file) as config_buffer:
 
 # Build model
 net = models.HeadPoseNet(config["model"]["im_width"], config["model"]
-                         ["im_height"], nb_bins=config["model"]["nb_bins"], learning_rate=config["train"]["learning_rate"])
+                         ["im_height"], nb_bins=config["model"]["nb_bins"],
+                         learning_rate=config["train"]["learning_rate"],
+                         backbond=config["model"]["backbond"])
 # Load model
 net.load_weights(config["test"]["model_file"])
 

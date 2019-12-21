@@ -51,7 +51,6 @@ class HeadPoseNet:
         if self.backbond == "SHUFFLE_NET_V2":
             feature = ShuffleNetv2(self.class_num)(inputs)
         elif self.backbond == "EFFICIENT_NET_B0":
-            feature = ShuffleNetv2(self.class_num)(inputs)
             feature = efn.EfficientNetB0(weights='imagenet', include_top=False, input_shape=(self.im_height, self.im_width, 3))(inputs)
 
         feature = tf.keras.layers.Flatten()(feature)
