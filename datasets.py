@@ -100,9 +100,16 @@ class DataSequence(Sequence):
     def __get_input_img(self, file_name, label, augment=False, flip=False):
 
         if flip:
+            # Flip head pose
             label['yaw'] = -label['yaw']
             label['roll'] = -label['roll']
+
+            # Flip landmark
             label["landmark"] = np.multiply(label["landmark"], np.array([-1, 1]))
+
+            # Change the indices of landmark points
+            l = label["landmark"]
+            label["landmark"] = [l[1], l[0], l[2], l[4], l[3]]
 
         unnomarlized_landmark = utils.unnormalize_landmark(label["landmark"], self.input_size)
         img = cv2.imread(file_name)
