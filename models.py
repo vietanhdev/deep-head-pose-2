@@ -57,6 +57,8 @@ class HeadPoseNet:
             feature = efn_backbond(inputs)
             feature = tf.keras.layers.Flatten()(feature)
             feature = tf.keras.layers.Dense(1024, activation='relu')(feature)
+        else:
+            raise ValueError('No such arch!... Please check the backend in config file')
 
         fc_yaw = tf.keras.layers.Dense(name='yaw', units=self.class_num)(feature)
         fc_pitch = tf.keras.layers.Dense(name='pitch', units=self.class_num)(feature)
