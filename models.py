@@ -54,8 +54,6 @@ class HeadPoseNet:
             feature = efn.EfficientNetB0(weights='imagenet', include_top=False, input_shape=(self.im_height, self.im_width, 3))(inputs)
 
         feature = tf.keras.layers.Flatten()(feature)
-        feature = tf.keras.layers.Dropout(0.5)(feature)
-        feature = tf.keras.layers.Dense(units=4096, activation=tf.nn.relu)(feature)
         
         fc_yaw = tf.keras.layers.Dense(name='yaw', units=self.class_num)(feature)
         fc_pitch = tf.keras.layers.Dense(name='pitch', units=self.class_num)(feature)
