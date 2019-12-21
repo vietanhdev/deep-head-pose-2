@@ -50,11 +50,14 @@ class HeadPoseNet:
 
         if self.backbond == "SHUFFLE_NET_V2":
             feature = ShuffleNetv2(self.class_num)(inputs)
+            feature = tf.keras.layers.Flatten()(feature)
         elif self.backbond == "EFFICIENT_NET_B0":
-            feature = efn.EfficientNetB0(weights='imagenet', include_top=False, input_shape=(self.im_height, self.im_width, 3))(inputs)
+            efn_backbond = efn.EfficientNetB0(weights='imagenet', include_top=False, input_shape=(self.im_height, self.im_width, 3))
+            efn_backbond.trainable = False
+            feature = efn_backbond(inputs)
+            feature = tf.keras.layers.Flatten()(feature)
+            feature = tf.keras.layers.Dense(1024, activation='relu')(feature)
 
-        feature = tf.keras.layers.Flatten()(feature)
-        
         fc_yaw = tf.keras.layers.Dense(name='yaw', units=self.class_num)(feature)
         fc_pitch = tf.keras.layers.Dense(name='pitch', units=self.class_num)(feature)
         fc_roll = tf.keras.layers.Dense(name='roll', units=self.class_num)(feature)
