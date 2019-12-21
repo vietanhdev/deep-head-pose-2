@@ -15,20 +15,18 @@
 
 - The original Pytorch version: https://github.com/natanielruiz/deep-head-pose
 
-## II. Dataset preparation
+## I. Environment:
 
-
-### Environment:
-
+- We use Tensorflow 2.0.0.
 - Install environment from `environment.yml` file using Anaconda and Miniconda and activate that environment.
 
-### Dataset can be prepared by following steps
+## II. Dataset preparation
 
 - 1. Download [300W_LP](http://www.cbsr.ia.ac.cn/users/xiangyuzhu/projects/3DDFA/main.htm), [BIWI](http://www.vision.ee.ethz.ch/en/datasets/) and [AFLW2000](http://cvlab.cse.msu.edu/lfw-and-aflw2000-datasets.html) datasets and put into `data/300W_LP`, `data/BIWI`, `data/AFLW2000` respectively.
 - 2. Use following scripts to generate data from those datasets: `make_data_300W_LP.py`, `make_data_BIWI.py`, `make_data_AFLW2000.py`. You can download final AFLW2000 from [here](https://drive.google.com/open?id=1XJXl0rmJ4gDqA8ZFLsSa-Ettbx4zjS26).
 - 3. Run  `sh split_data_set.sh` to split dataset. This script will take 2000 images from 300W_LP and 2000 images from BIWI dataset to build validation set at `data/val_set` and remaining parts of these dataset to build training set at `data/train_set`. We use AFLW2000 as testing set.
 
-## II. Training and testing
+## III. Training and testing
 
 ### Training
 
