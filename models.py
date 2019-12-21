@@ -159,6 +159,7 @@ class HeadPoseNet:
         print("- Yaw MAE: {}".format(yaw_error / total_samples))
         print("- Pitch MAE: {}".format(pitch_error / total_samples))
         print("- Roll MAE: {}".format(roll_error / total_samples))
+        print("- Head pose MAE: {}".format((yaw_error + pitch_error + roll_error) / total_samples / 3))
         print("- Landmark MAE: {}".format(landmark_error / total_samples / 10))
         print("- Avg. FPS: {}".format(avg_fps))
         
