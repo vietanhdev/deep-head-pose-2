@@ -182,5 +182,13 @@ class HeadPoseNet:
 
     def normalize_img_batch(self, face_imgs):
         image_batch = np.array(face_imgs, dtype=np.float32)
-        normed_image_batch = (image_batch - image_batch.mean())/image_batch.std()
-        return normed_image_batch
+        image_batch /= 255.
+        mean = [0.485, 0.456, 0.406]
+        std = [0.229, 0.224, 0.225]
+        image_batch[..., 0] -= mean[0]
+        image_batch[..., 1] -= mean[1]
+        image_batch[..., 2] -= mean[2]
+        image_batch[..., 0] /= std[0]
+        image_batch[..., 1] /= std[1]
+        image_batch[..., 2] /= std[2]
+        return image_batch

@@ -143,7 +143,16 @@ class DataSequence(Sequence):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         if self.normalize:
-            img = (img - img.mean())/img.std()
+            img = img.astype(np.float, copy=False)
+            img /= 255.
+            mean = [0.485, 0.456, 0.406]
+            std = [0.229, 0.224, 0.225]
+            img[..., 0] -= mean[0]
+            img[..., 1] -= mean[1]
+            img[..., 2] -= mean[2]
+            img[..., 0] /= std[0]
+            img[..., 1] /= std[1]
+            img[..., 2] /= std[2]
         return img, label
 
     def __get_input_label(self, file_name):
