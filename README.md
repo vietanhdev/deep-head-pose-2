@@ -15,6 +15,10 @@
 
 - The original Pytorch version: https://github.com/natanielruiz/deep-head-pose
 
+- Pretrained model for:
+    + ShuffleNet V2: <models/shufflenet_v2.h5>.
+    + EfficientNet: <https://drive.google.com/open?id=1lZHkaaCO_GZU8F6Ag8PzTzMDmS0Ramv6>.
+
 ## I. Environment:
 
 - We use Tensorflow 2.0.0.
