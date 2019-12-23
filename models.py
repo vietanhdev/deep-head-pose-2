@@ -97,12 +97,6 @@ class HeadPoseNet:
         # Define the callbacks for training
         tb = TensorBoard(log_dir=train_conf["logs_dir"], write_graph=True)
         mc = ModelCheckpoint(filepath=os.path.join(train_conf["model_folder"], train_conf["model_base_name"] + "_ep{epoch:03d}.h5"), save_weights_only=True, save_format="h5", verbose=2)
-        def step_decay(epoch, lr):
-            drop = train_conf["learning_rate_drop"]
-            epochs_drop = train_conf["learning_rate_epochs_drop"]
-            lrate = lr * math.pow(drop,math.floor((1+epoch)/epochs_drop))
-            return lrate
-        lr = LearningRateScheduler(step_decay)
         
         self.model.fit_generator(generator=train_dataset,
                                 epochs=train_conf["nb_epochs"],
@@ -111,7 +105,7 @@ class HeadPoseNet:
                                 validation_steps=len(val_dataset),
                                 max_queue_size=64,
                                 workers=6,
-                                callbacks=[tb, mc, lr],
+                                callbacks=[tb, mc],
                                 verbose=1)
             
     def test(self, test_dataset, show_result=False):

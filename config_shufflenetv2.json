@@ -13,20 +13,18 @@
         "val_batch_size":               8,
         "nb_epochs":                    30,
         "debug":                        true,
-        "model_folder" :                "./models_shufflenetv2_224x224/",
-        "model_base_name":              "model",
+        "model_folder" :                "./models/",
+        "model_base_name":              "shufflenet_v2",
         "load_weights":                 false,
-        "pretrained_weights_path":      "model.h5",
-        "logs_dir" :                    "logs_shufflenetv2_224x224",
-        "learning_rate":                1e-4,
-        "learning_rate_drop":           0.5,
-        "learning_rate_epochs_drop":    20,
+        "pretrained_weights_path":      "models/model_to_load.h5",
+        "logs_dir" :                    "logs",
+        "learning_rate":                1e-7,
         "loss_weights_yaw_pitch_roll_landmark": [1,1,1,5000],
         "loss_angle_alpha": 0.5
     },
 
     "test": {
-        "model_file" :                 "models_shufflenetv2_224x224/model_ep030.h5",
+        "model_file" :                 "models/shufflenet_v2.h5",
         "test_data_folder":            "./data/AFLW2000_prepared/",
         "test_batch_size":             8
     }
