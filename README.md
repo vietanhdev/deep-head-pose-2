@@ -1,6 +1,6 @@
 # Deep Head Pose 2 - Keras Tensorflow 2
 
-![Deep Head Pose 2](screenshots/deepheadpose2.png)
+[![Deep Head Pose 2](screenshots/deepheadpose2.png)](https://www.youtube.com/watch?v=SNHnsuNkBkQ)
 
 ## I. Introduction
 
