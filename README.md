@@ -12,14 +12,14 @@
     + Support 3 datasets: BIWI, AFLW2000, 300W_LP. 
         + All datasets are converted to uniform format (png files for images and JSON files for labels).
         + Use [Retina Face](https://github.com/deepinsight/insightface) for generating bounding box and landmark label automatically for BIWI dataset.
-        + Re-label landmark points for AFLW2000. The final dataset can be downloaded from [here](https://drive.google.com/open?id=1XJXl0rmJ4gDqA8ZFLsSa-Ettbx4zjS26).
+        + Re-label landmark points for AFLW2000. The final dataset can be downloaded from [here](https://1drv.ms/u/s!Av71xxzl6mYZgddGNOolzhRWvELnlQ?e=qf4aVF).
     + Write image augmentation code using multiple methods: blur, crop, add padding, sharpen, dropout, flip, adjust color and constrast...
 
 - The original Pytorch version: https://github.com/natanielruiz/deep-head-pose
 
 - Pretrained model for:
-    + ShuffleNet V2: <models/shufflenet_v2.h5>.
-    + EfficientNet: <https://drive.google.com/open?id=1lZHkaaCO_GZU8F6Ag8PzTzMDmS0Ramv6>.
+    + ShuffleNet V2: [models/shufflenet_v2.h5](models/shufflenet_v2.h5).
+    + EfficientNet: <https://1drv.ms/u/s!Av71xxzl6mYZgddGNOolzhRWvELnlQ?e=TCd055>.
 
 ## I. Environment:
 
